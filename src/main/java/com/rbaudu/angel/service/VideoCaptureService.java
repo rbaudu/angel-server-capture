@@ -45,6 +45,10 @@ public class VideoCaptureService {
     private AtomicBoolean running;
     private AtomicLong frameCounter;
     private Thread captureThread;
+    private AtomicBoolean cameraAvailable;
+    private int cameraRetryCount;
+    private static final int MAX_RETRY_COUNT = 3;
+
     
     /**
      * Initialise le service de capture vidéo.
@@ -65,10 +69,14 @@ public class VideoCaptureService {
             converter = new OpenCVFrameConverter.ToMat();
             java2dConverter = new Java2DFrameConverter();
             running = new AtomicBoolean(false);
+            cameraAvailable = new AtomicBoolean(true);
+            cameraRetryCount = 0;
             frameCounter = new AtomicLong(0);
             log.info("Service de capture vidéo initialisé");
         } catch (Exception e) {
             log.error("Erreur lors de l'initialisation du service de capture vidéo", e);
+            cameraAvailable.set(false);
+
         }
     }
     
@@ -76,13 +84,30 @@ public class VideoCaptureService {
      * Démarre la capture vidéo dans un thread séparé.
      */
     public void start() {
-        if (!config.isVideoEnabled() || running.get()) {
+        if (!config.isVideoEnabled() || running.get() || !cameraAvailable.get()) {
+            if (!cameraAvailable.get()) {
+                log.warn("Démarrage de la vidéo impossible: caméra non disponible");
+            }
             return;
         }
         
         try {
             log.info("Démarrage de la capture vidéo...");
-            grabber.start();
+            try {
+                grabber.start();
+                cameraRetryCount = 0;
+            } catch (Exception e) {
+                cameraRetryCount++;
+                if (cameraRetryCount >= MAX_RETRY_COUNT) {
+                    cameraAvailable.set(false);
+                    log.error("La caméra n'est pas disponible après {} tentatives. Désactivation de la capture vidéo.", MAX_RETRY_COUNT);
+                    return;
+                }
+                log.warn("Erreur lors du démarrage de la caméra (tentative {}/{}), nouvelle tentative...", 
+                        cameraRetryCount, MAX_RETRY_COUNT);
+                return;
+            }
+            
             running.set(true);
             
             captureThread = new Thread(() -> {
@@ -128,12 +153,26 @@ public class VideoCaptureService {
      * Boucle principale de capture vidéo.
      */
     private void captureLoop() {
+        int errorCount = 0;
+        final int MAX_ERRORS = 10;
+        
         try {
             while (running.get() && !Thread.currentThread().isInterrupted()) {
-                Frame frame = grabber.grab();
-                
-                if (frame != null && !frame.image.isNull()) {
-                    processFrame(frame);
+                try {
+                    Frame frame = grabber.grab();
+                    
+                    if (frame != null && frame.image != null) {
+                        errorCount = 0;  // Réinitialiser le compteur d'erreurs en cas de réussite
+                        processFrame(frame);
+                    }
+                } catch (Exception e) {
+                    errorCount++;
+                    log.warn("Erreur de capture de trame: {} ({}/{})", e.getMessage(), errorCount, MAX_ERRORS);
+                    
+                    if (errorCount >= MAX_ERRORS) {
+                        log.error("Trop d'erreurs consécutives de capture. Arrêt de la boucle.");
+                        break;
+                    }
                 }
                 
                 // Respecter la cadence configurée
@@ -144,6 +183,8 @@ public class VideoCaptureService {
             log.info("Thread de capture vidéo interrompu");
         } catch (Exception e) {
             log.error("Erreur dans la boucle de capture vidéo", e);
+        } finally {
+            running.set(false);
         }
     }
     
@@ -195,6 +236,15 @@ public class VideoCaptureService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ImageIO.write(image, format, outputStream);
         return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+    }
+    
+    /**
+     * Indique si la caméra est disponible.
+     * 
+     * @return true si la caméra est disponible, false sinon
+     */
+    public boolean isCameraAvailable() {
+        return cameraAvailable.get();
     }
     
     /**

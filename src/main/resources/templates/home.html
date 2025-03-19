@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr"
+      th:replace="~{layout/default :: html (content=~{::content}, headScripts=~{::headScripts}, bodyScripts=~{::bodyScripts})}">
+
+<head>
+    <th:block th:fragment="headScripts">
+        <!-- Scripts spécifiques pour la tête du document -->
+    </th:block>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="mb-0">
+                            <i class="fas fa-home"></i> Bienvenue sur Angel Server Capture
+                        </h1>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">
+                            Ce serveur permet de capturer, synchroniser et analyser des flux vidéo et audio.
+                        </p>
+                        
+                        <div class="alert alert-info">
+                            <h4><i class="fas fa-info-circle"></i> État des services</h4>
+                            <p th:if="${isRunning}" class="text-success">
+                                <i class="fas fa-check-circle"></i> Les services de capture sont actuellement <strong>en cours d'exécution</strong>.
+                            </p>
+                            <p th:unless="${isRunning}" class="text-danger">
+                                <i class="fas fa-times-circle"></i> Les services de capture sont actuellement <strong>arrêtés</strong>.
+                            </p>
+                            
+                            <div class="mt-3">
+                                <button id="startButton" class="btn btn-success" th:disabled="${isRunning}">
+                                    <i class="fas fa-play"></i> Démarrer
+                                </button>
+                                <button id="stopButton" class="btn btn-danger" th:disabled="${!isRunning}">
+                                    <i class="fas fa-stop"></i> Arrêter
+                                </button>
+                                <button id="restartButton" class="btn btn-warning">
+                                    <i class="fas fa-sync"></i> Redémarrer
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-video"></i> Capture Vidéo</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p th:if="${videoEnabled}" class="text-success">
+                                            <i class="fas fa-check-circle"></i> Activée
+                                        </p>
+                                        <p th:unless="${videoEnabled}" class="text-danger">
+                                            <i class="fas fa-times-circle"></i> Désactivée
+                                        </p>
+                                        <p>Utilisé pour capturer le flux vidéo de la caméra en temps réel.</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <a th:href="@{/live}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-eye"></i> Visualiser
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-volume-up"></i> Capture Audio</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p th:if="${audioEnabled}" class="text-success">
+                                            <i class="fas fa-check-circle"></i> Activée
+                                        </p>
+                                        <p th:unless="${audioEnabled}" class="text-danger">
+                                            <i class="fas fa-times-circle"></i> Désactivée
+                                        </p>
+                                        <p>Utilisé pour capturer le flux audio du système en temps réel.</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <a th:href="@{/live}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-music"></i> Écouter
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-chart-line"></i> Analyse</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p th:if="${analysisEnabled}" class="text-success">
+                                            <i class="fas fa-check-circle"></i> Activée
+                                        </p>
+                                        <p th:unless="${analysisEnabled}" class="text-danger">
+                                            <i class="fas fa-times-circle"></i> Désactivée
+                                        </p>
+                                        <p>Analyse des flux pour détecter le mouvement, les personnes et leur position.</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <a th:href="@{/config}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-cog"></i> Configurer
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block th:fragment="bodyScripts">
+        <!-- Scripts spécifiques pour le pied du document -->
+        <script th:inline="javascript">
+            $(document).ready(function() {
+                // Connexion WebSocket
+                var socket = new SockJS('/angel/ws');
+                var stompClient = Stomp.over(socket);
+                
+                stompClient.connect({}, function(frame) {
+                    console.log('Connected: ' + frame);
+                    
+                    // S'abonner au topic de statut
+                    stompClient.subscribe('/topic/status', function(response) {
+                        var status = response.body;
+                        updateButtonsState(status === 'started');
+                        
+                        if (status === 'started') {
+                            showAlert('success', 'Les services ont été démarrés avec succès.');
+                        } else if (status === 'stopped') {
+                            showAlert('warning', 'Les services ont été arrêtés.');
+                        } else if (status === 'restarted') {
+                            showAlert('info', 'Les services ont été redémarrés avec succès.');
+                        } else if (status === 'error') {
+                            showAlert('danger', 'Une erreur s\'est produite lors de l\'exécution de l\'action.');
+                        }
+                    });
+                }, function(error) {
+                    console.error('Erreur de connexion STOMP: ' + error);
+                });
+                
+                // Actions des boutons
+                $('#startButton').click(function() {
+                    stompClient.send("/app/capture/control", {}, "start");
+                });
+                
+                $('#stopButton').click(function() {
+                    stompClient.send("/app/capture/control", {}, "stop");
+                });
+                
+                $('#restartButton').click(function() {
+                    stompClient.send("/app/capture/control", {}, "restart");
+                });
+                
+                // Fonction pour mettre à jour l'état des boutons
+                function updateButtonsState(isRunning) {
+                    $('#startButton').prop('disabled', isRunning);
+                    $('#stopButton').prop('disabled', !isRunning);
+                }
+                
+                // Fonction pour afficher une alerte
+                function showAlert(type, message) {
+                    var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                        message +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                        '</div>';
+                    
+                    // Ajouter l'alerte au début de la page
+                    $('.card-body').first().prepend(alertHtml);
+                    
+                    // Auto-disparition après 5 secondes
+                    setTimeout(function() {
+                        $('.alert').alert('close');
+                    }, 5000);
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>
