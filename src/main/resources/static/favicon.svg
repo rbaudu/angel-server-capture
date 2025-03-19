@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="wingGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4dabf7" />
+      <stop offset="50%" stop-color="#339af0" />
+      <stop offset="100%" stop-color="#1864ab" />
+    </linearGradient>
+    <linearGradient id="wingGradient2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4dabf7" />
+      <stop offset="50%" stop-color="#339af0" />
+      <stop offset="100%" stop-color="#1864ab" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="62" fill="white" stroke="#1864ab" stroke-width="2" />
+  
+  <!-- Text A -->
+  <text x="64" y="80" 
+        font-family="Arial, sans-serif" 
+        font-size="60" 
+        font-weight="bold" 
+        text-anchor="middle" 
+        fill="#1864ab">A</text>
+  
+  <!-- Left Wing -->
+  <path d="M41,65 
+         C31,45 20,41 12,48
+         C6,54 9,66 18,69
+         C27,72 37,70 41,65 Z
+         M41,65
+         C38,61 32,58 28,59" 
+        fill="url(#wingGradient1)" 
+        stroke="#1864ab" 
+        stroke-width="1" />
+  
+  <!-- Right Wing -->
+  <path d="M87,65 
+         C97,45 108,41 116,48
+         C122,54 119,66 110,69
+         C101,72 91,70 87,65 Z
+         M87,65
+         C90,61 96,58 100,59" 
+        fill="url(#wingGradient2)" 
+        stroke="#1864ab" 
+        stroke-width="1" />
+</svg>
