@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr"
+      th:replace="~{layout/default :: html (content=~{::content}, headScripts=~{::headScripts}, bodyScripts=~{::bodyScripts})}">
+
+<head>
+    <th:block th:fragment="headScripts">
+        <style>
+            #videoContainer {
+                position: relative;
+                max-width: 100%;
+                margin: 0 auto;
+                background-color: #000;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            
+            #videoDisplay {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+            
+            #audioContainer {
+                margin-top: 20px;
+                padding: 15px;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+            }
+            
+            #audioVisualizer {
+                width: 100%;
+                height: 100px;
+                background-color: #343a40;
+                border-radius: 4px;
+                display: flex;
+                align-items: flex-end;
+                padding: 0 5px;
+            }
+            
+            .control-panel {
+                background-color: rgba(0, 0, 0, 0.7);
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 10px;
+                display: flex;
+                justify-content: space-between;
+            }
+            
+            .stat-panel {
+                background-color: rgba(0, 0, 0, 0.5);
+                color: white;
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 0.8rem;
+            }
+            
+            .detection-indicator {
+                padding: 5px;
+                border-radius: 50%;
+                margin-right: 5px;
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+            }
+            
+            .detection-on {
+                background-color: #28a745;
+            }
+            
+            .detection-off {
+                background-color: #dc3545;
+            }
+            
+            .audio-bar {
+                display: block;
+                margin: 2px;
+                background-color: #007bff;
+                border-radius: 2px;
+            }
+            
+            /* Animation de l'indicateur de synchronisation */
+            @keyframes sync-pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.2); }
+                100% { transform: scale(1); }
+            }
+            
+            .sync-indicator {
+                color: #28a745;
+                animation: sync-pulse 1.5s infinite;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="mb-0">
+                            <i class="fas fa-video"></i> Visualisation en Direct
+                        </h1>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" th:if="${!isRunning}">
+                            <i class="fas fa-info-circle"></i> Les services de capture ne sont pas actifs. Veuillez les démarrer pour voir les flux.
+                            <button id="startButton" class="btn btn-success btn-sm ms-3">
+                                <i class="fas fa-play"></i> Démarrer la capture
+                            </button>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-8">
+                                <!-- Conteneur vidéo -->
+                                <div id="videoContainer">
+                                    <img id="videoDisplay" th:attr="width=${videoWidth},height=${videoHeight}" 
+                                         src="/angel/static/img/placeholder.jpg" alt="Flux vidéo">
+                                    
+                                    <!-- Panneau de stats -->
+                                    <div class="stat-panel">
+                                        <div>
+                                            <span class="detection-indicator" id="motionIndicator"></span>
+                                            <span>Mouvement</span>
+                                        </div>
+                                        <div>
+                                            <span class="detection-indicator" id="personIndicator"></span>
+                                            <span>Personne</span>
+                                        </div>
+                                        <div>
+                                            <i class="fas fa-sync sync-indicator" id="syncIndicator" style="display: none;"></i>
+                                            <span>Synchronisé</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Panneau de contrôle -->
+                                    <div class="control-panel">
+                                        <div>
+                                            <button id="toggleAudioButton" class="btn btn-sm btn-light">
+                                                <i class="fas fa-volume-up"></i>
+                                            </button>
+                                            <button id="takeSnapshotButton" class="btn btn-sm btn-light ms-2">
+                                                <i class="fas fa-camera"></i>
+                                            </button>
+                                        </div>
+                                        <div>
+                                            <span class="text-white" id="fpsCounter">0 FPS</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contrôles supplémentaires -->
+                                <div class="mt-3">
+                                    <button id="restartCaptureButton" class="btn btn-warning">
+                                        <i class="fas fa-sync"></i> Redémarrer la capture
+                                    </button>
+                                    <button id="stopCaptureButton" class="btn btn-danger ms-2">
+                                        <i class="fas fa-stop"></i> Arrêter la capture
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <!-- Conteneur audio -->
+                                <div id="audioContainer">
+                                    <h5><i class="fas fa-volume-up"></i> Flux Audio</h5>
+                                    
+                                    <div id="audioVisualizer">
+                                        <!-- Les barres audio seront générées dynamiquement -->
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Niveau sonore: </span>
+                                            <span id="soundLevel">-∞ dB</span>
+                                        </div>
+                                        <div class="progress mt-2">
+                                            <div id="soundLevelBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enableAudioSwitch" checked>
+                                            <label class="form-check-label" for="enableAudioSwitch">Activer le son</label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="showVisualizerSwitch" checked>
+                                            <label class="form-check-label" for="showVisualizerSwitch">Afficher le visualiseur</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Informations de synchronisation -->
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-clock"></i> Informations de Synchronisation
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Délai de synchro
+                                                <span id="syncDelayMs" class="badge bg-primary">0 ms</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                FPS vidéo
+                                                <span id="videoFps" class="badge bg-primary">0</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                FPS audio
+                                                <span id="audioFps" class="badge bg-primary">0</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <th:block th:fragment="bodyScripts">
+        <script th:inline="javascript">
+            $(document).ready(function() {
+                // Variables pour le calcul des FPS
+                var videoFrameCount = 0;
+                var audioChunkCount = 0;
+                var lastVideoTime = Date.now();
+                var lastAudioTime = Date.now();
+                
+                // Connexion WebSocket
+                var socket = new SockJS('/angel/ws');
+                var stompClient = Stomp.over(socket);
+                
+                stompClient.connect({}, function(frame) {
+                    console.log('Connected: ' + frame);
+                    
+                    // S'abonner au topic de vidéo
+                    stompClient.subscribe('/topic/video', function(videoFrame) {
+                        handleVideoFrame(JSON.parse(videoFrame.body));
+                    });
+                    
+                    // S'abonner au topic audio
+                    stompClient.subscribe('/topic/audio', function(audioChunk) {
+                        handleAudioChunk(JSON.parse(audioChunk.body));
+                    });
+                    
+                    // S'abonner au topic des médias synchronisés
+                    stompClient.subscribe('/topic/synchronized', function(syncMedia) {
+                        handleSynchronizedMedia(JSON.parse(syncMedia.body));
+                    });
+                    
+                    // S'abonner au topic de statut
+                    stompClient.subscribe('/topic/status', function(response) {
+                        var status = response.body;
+                        
+                        if (status === 'started') {
+                            showAlert('success', 'Les services ont été démarrés avec succès.');
+                            $('.alert-info').hide();
+                        } else if (status === 'stopped') {
+                            showAlert('warning', 'Les services ont été arrêtés.');
+                            $('.alert-info').show();
+                        } else if (status === 'restarted') {
+                            showAlert('info', 'Les services ont été redémarrés avec succès.');
+                        }
+                    });
+                    
+                    // Informer le serveur que le client est prêt à recevoir des flux vidéo
+                    stompClient.send("/app/video/subscribe", {}, "subscribe");
+                    stompClient.send("/app/audio/subscribe", {}, "subscribe");
+                    stompClient.send("/app/synchronized/subscribe", {}, "subscribe");
+                }, function(error) {
+                    console.error('Erreur de connexion STOMP: ' + error);
+                    showAlert('danger', 'Erreur de connexion au serveur. Veuillez rafraîchir la page.');
+                });
+                
+                // Traitement des trames vidéo
+                function handleVideoFrame(videoFrame) {
+                    // Mettre à jour l'image vidéo
+                    if (videoFrame.imageData) {
+                        $('#videoDisplay').attr('src', 'data:image/jpeg;base64,' + videoFrame.imageData);
+                    }
+                    
+                    // Mettre à jour les indicateurs de détection
+                    updateDetectionIndicator('motionIndicator', videoFrame.motionDetected);
+                    updateDetectionIndicator('personIndicator', videoFrame.personDetected);
+                    
+                    // Calculer et afficher les FPS
+                    videoFrameCount++;
+                    var now = Date.now();
+                    var elapsed = now - lastVideoTime;
+                    
+                    if (elapsed >= 1000) {
+                        var fps = Math.round((videoFrameCount * 1000) / elapsed);
+                        $('#fpsCounter').text(fps + ' FPS');
+                        $('#videoFps').text(fps);
+                        
+                        videoFrameCount = 0;
+                        lastVideoTime = now;
+                    }
+                }
+                
+                // Traitement des segments audio
+                function handleAudioChunk(audioChunk) {
+                    // Mettre à jour le niveau sonore
+                    if (audioChunk.avgSoundLevel) {
+                        var level = audioChunk.avgSoundLevel;
+                        var displayLevel = level.toFixed(1);
+                        $('#soundLevel').text(displayLevel + ' dB');
+                        
+                        // Normaliser le niveau pour la barre de progression (entre -60dB et 0dB)
+                        var normalizedLevel = Math.max(0, Math.min(100, (level + 60) * 1.66));
+                        $('#soundLevelBar').css('width', normalizedLevel + '%');
+                        
+                        // Changer la couleur en fonction du niveau
+                        if (level > -10) {
+                            $('#soundLevelBar').removeClass('bg-success bg-warning').addClass('bg-danger');
+                        } else if (level > -30) {
+                            $('#soundLevelBar').removeClass('bg-success bg-danger').addClass('bg-warning');
+                        } else {
+                            $('#soundLevelBar').removeClass('bg-warning bg-danger').addClass('bg-success');
+                        }
+                        
+                        // Mettre à jour le visualiseur si activé
+                        if ($('#showVisualizerSwitch').is(':checked')) {
+                            updateAudioVisualizer(normalizedLevel);
+                        }
+                    }
+                    
+                    // Calculer et afficher les FPS audio
+                    audioChunkCount++;
+                    var now = Date.now();
+                    var elapsed = now - lastAudioTime;
+                    
+                    if (elapsed >= 1000) {
+                        var fps = Math.round((audioChunkCount * 1000) / elapsed);
+                        $('#audioFps').text(fps);
+                        
+                        audioChunkCount = 0;
+                        lastAudioTime = now;
+                    }
+                }
+                
+                // Traitement des médias synchronisés
+                function handleSynchronizedMedia(syncMedia) {
+                    // Mettre à jour l'indicateur de synchronisation
+                    $('#syncIndicator').show();
+                    setTimeout(function() {
+                        $('#syncIndicator').hide();
+                    }, 500);
+                    
+                    // Afficher le délai de synchronisation
+                    if (syncMedia.syncDelayMs !== undefined) {
+                        $('#syncDelayMs').text(syncMedia.syncDelayMs + ' ms');
+                    }
+                    
+                    // Traiter les composants vidéo et audio si présents
+                    if (syncMedia.hasVideo && syncMedia.videoFrame) {
+                        handleVideoFrame(syncMedia.videoFrame);
+                    }
+                    
+                    if (syncMedia.hasAudio && syncMedia.audioChunk) {
+                        handleAudioChunk(syncMedia.audioChunk);
+                    }
+                }
+                
+                // Mettre à jour l'indicateur de détection (mouvement, personne)
+                function updateDetectionIndicator(elementId, isDetected) {
+                    var indicator = $('#' + elementId);
+                    
+                    if (isDetected) {
+                        indicator.removeClass('detection-off').addClass('detection-on');
+                    } else {
+                        indicator.removeClass('detection-on').addClass('detection-off');
+                    }
+                }
+                
+                // Mettre à jour le visualiseur audio
+                function updateAudioVisualizer(level) {
+                    var visualizer = $('#audioVisualizer');
+                    
+                    // Générer un nombre aléatoire de barres basé sur le niveau sonore
+                    var numBars = 32;
+                    visualizer.empty();
+                    
+                    for (var i = 0; i < numBars; i++) {
+                        // Calculer la hauteur de la barre en fonction du niveau sonore
+                        var barHeight = Math.random() * level * 0.8 + level * 0.2;
+                        barHeight = Math.min(barHeight, 100); // Limiter à 100%
+                        
+                        // Créer la barre
+                        var bar = $('<div class="audio-bar"></div>');
+                        bar.css({
+                            'height': barHeight + '%',
+                            'width': ((100 / numBars) - 0.5) + '%'
+                        });
+                        
+                        // Ajouter une couleur basée sur la hauteur
+                        if (barHeight > 80) {
+                            bar.css('background-color', '#dc3545'); // Rouge
+                        } else if (barHeight > 50) {
+                            bar.css('background-color', '#ffc107'); // Jaune
+                        } else {
+                            bar.css('background-color', '#28a745'); // Vert
+                        }
+                        
+                        visualizer.append(bar);
+                    }
+                }
+                
+                // Fonction pour capturer une image
+                $('#takeSnapshotButton').click(function() {
+                    var img = $('#videoDisplay').attr('src');
+                    if (img && !img.includes('placeholder')) {
+                        // Créer un lien pour télécharger l'image
+                        var link = document.createElement('a');
+                        link.href = img;
+                        link.download = 'capture-' + new Date().toISOString().replace(/[:.]/g, '-') + '.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        showAlert('warning', 'Aucune image vidéo disponible à capturer.');
+                    }
+                });
+                
+                // Gérer les commandes de contrôle
+                $('#startButton').click(function() {
+                    stompClient.send("/app/capture/control", {}, "start");
+                });
+                
+                $('#stopCaptureButton').click(function() {
+                    stompClient.send("/app/capture/control", {}, "stop");
+                });
+                
+                $('#restartCaptureButton').click(function() {
+                    stompClient.send("/app/capture/control", {}, "restart");
+                });
+                
+                // Gérer l'activation/désactivation de l'audio
+                $('#toggleAudioButton').click(function() {
+                    var isEnabled = $('#enableAudioSwitch').is(':checked');
+                    $('#enableAudioSwitch').prop('checked', !isEnabled).trigger('change');
+                });
+                
+                $('#enableAudioSwitch').change(function() {
+                    var isEnabled = $(this).is(':checked');
+                    if (isEnabled) {
+                        $('#toggleAudioButton i').removeClass('fa-volume-mute').addClass('fa-volume-up');
+                    } else {
+                        $('#toggleAudioButton i').removeClass('fa-volume-up').addClass('fa-volume-mute');
+                    }
+                });
+                
+                // Gérer l'activation/désactivation du visualiseur
+                $('#showVisualizerSwitch').change(function() {
+                    var isEnabled = $(this).is(':checked');
+                    if (isEnabled) {
+                        $('#audioVisualizer').show();
+                    } else {
+                        $('#audioVisualizer').hide();
+                    }
+                });
+                
+                // Fonction pour afficher une alerte
+                function showAlert(type, message) {
+                    var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                        message +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                        '</div>';
+                    
+                    // Ajouter l'alerte au début de la page
+                    $('.card-body').first().prepend(alertHtml);
+                    
+                    // Auto-disparition après 5 secondes
+                    setTimeout(function() {
+                        $('.alert').alert('close');
+                    }, 5000);
+                }
+                
+                // Initialiser les indicateurs au chargement
+                updateDetectionIndicator('motionIndicator', false);
+                updateDetectionIndicator('personIndicator', false);
+            });
+        </script>
+    </th:block>
+</body>
+</html>
