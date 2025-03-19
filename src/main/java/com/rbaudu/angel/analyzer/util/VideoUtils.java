@@ -58,7 +58,7 @@ public class VideoUtils {
      * @param width Largeur du tensor
      * @return Tensor TensorFlow
      */
-    public Tensor<TFloat32> matToTensor(Mat frame, int height, int width) {
+    public Tensor matToTensor(Mat frame, int height, int width) {
         // Suppose que l'image est déjà en RGB et normalisée entre 0-1
         
         // Créer un tampon pour les pixels de l'image
@@ -78,7 +78,7 @@ public class VideoUtils {
         floatBuffer.rewind();
         
         // Créer le tensor à partir du tampon
-        return TFloat32.tensorOf(org.tensorflow.Shape.of(1, height, width, 3), floatBuffer);
+        return Tensor.create(org.tensorflow.Shape.of(1, height, width, 3), floatBuffer);
     }
     
     /**

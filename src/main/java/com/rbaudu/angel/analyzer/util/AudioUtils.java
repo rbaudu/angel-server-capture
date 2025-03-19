@@ -207,7 +207,7 @@ public class AudioUtils {
      * @param audioData Données audio en format flottant
      * @return Tensor pour l'entrée du modèle
      */
-    public Tensor<TFloat32> audioToTensor(float[] audioData) {
+    public Tensor audioToTensor(float[] audioData) {
         // Format: [batch_size, audio_length]
         FloatBuffer floatBuffer = FloatBuffer.allocate(1 * audioData.length);
         
@@ -217,7 +217,7 @@ public class AudioUtils {
         
         floatBuffer.rewind();
         
-        return TFloat32.tensorOf(org.tensorflow.Shape.of(1, audioData.length), floatBuffer);
+        return Tensor.create(org.tensorflow.Shape.of(1, audioData.length), floatBuffer);
     }
     
     /**
