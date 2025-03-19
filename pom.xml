@@ -12,7 +12,7 @@
     <groupId>com.rbaudu</groupId>
     <artifactId>angel-server-capture</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <name>angel-server-capture</name>
+    <n>angel-server-capture</n>
     <description>Serveur de capture, synchronisation et analyse de flux vidéo et audio</description>
     
     <properties>
@@ -21,6 +21,9 @@
         <javacv.version>1.5.9</javacv.version>
         <opencv.version>4.7.0-1.5.9</opencv.version>
         <ffmpeg.version>6.0-1.5.9</ffmpeg.version>
+        <tensorflow.version>0.5.0</tensorflow.version>
+        <tarsosdsp.version>2.5</tarsosdsp.version>
+        <dl4j.version>1.0.0-M2.1</dl4j.version>
     </properties>
     
     <dependencies>
@@ -76,6 +79,27 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+        
+        <!-- TensorFlow dependencies -->
+        <dependency>
+            <groupId>org.tensorflow</groupId>
+            <artifactId>tensorflow-core-platform</artifactId>
+            <version>${tensorflow.version}</version>
+        </dependency>
+        
+        <!-- TarsosDSP for audio processing -->
+        <dependency>
+            <groupId>be.tarsos.dsp</groupId>
+            <artifactId>core</artifactId>
+            <version>${tarsosdsp.version}</version>
+        </dependency>
+        
+        <!-- DeepLearning4J (optional, for more advanced ML) -->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-core</artifactId>
+            <version>${dl4j.version}</version>
         </dependency>
         
         <!-- Testing dependencies -->
