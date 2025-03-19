@@ -2,6 +2,10 @@ package com.rbaudu.angel.model;
 
 import java.time.Instant;
 
+import org.bytedeco.opencv.opencv_core.Mat;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -66,4 +70,11 @@ public class VideoFrame {
      * Position Y du centre de la personne détectée (si applicable).
      */
     private Integer personY;
+    
+    /**
+     * Matrice OpenCV de la trame.
+     * Ce champ est ignoré lors de la sérialisation/désérialisation JSON.
+     */
+    @JsonIgnore
+    private transient Mat frameMat;
 }
