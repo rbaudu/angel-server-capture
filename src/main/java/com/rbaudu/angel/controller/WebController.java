@@ -1,5 +1,6 @@
 package com.rbaudu.angel.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,10 +28,11 @@ public class WebController {
      * Page d'accueil du serveur de capture.
      * 
      * @param model le modèle pour la vue
+     * @param request la requête HTTP
      * @return nom de la vue à afficher
      */
     @GetMapping("/")
-    public String home(Model model) {
+    public String home(Model model, HttpServletRequest request) {
         log.debug("Affichage de la page d'accueil");
         
         model.addAttribute("title", "Angel Server - Accueil");
@@ -38,6 +40,7 @@ public class WebController {
         model.addAttribute("audioEnabled", config.isAudioEnabled());
         model.addAttribute("analysisEnabled", config.isAnalysisEnabled());
         model.addAttribute("isRunning", captureServiceManager.isRunning());
+        model.addAttribute("httpServletRequest", request);
         
         return "home";
     }
@@ -46,10 +49,11 @@ public class WebController {
      * Page de visualisation en direct des flux.
      * 
      * @param model le modèle pour la vue
+     * @param request la requête HTTP
      * @return nom de la vue à afficher
      */
     @GetMapping("/live")
-    public String live(Model model) {
+    public String live(Model model, HttpServletRequest request) {
         log.debug("Affichage de la page de visualisation en direct");
         
         model.addAttribute("title", "Angel Server - Visualisation en direct");
@@ -58,6 +62,7 @@ public class WebController {
         model.addAttribute("videoWidth", config.getVideoWidth());
         model.addAttribute("videoHeight", config.getVideoHeight());
         model.addAttribute("isRunning", captureServiceManager.isRunning());
+        model.addAttribute("httpServletRequest", request);
         
         return "live";
     }
@@ -66,14 +71,16 @@ public class WebController {
      * Page de configuration du serveur.
      * 
      * @param model le modèle pour la vue
+     * @param request la requête HTTP
      * @return nom de la vue à afficher
      */
     @GetMapping("/config")
-    public String config(Model model) {
+    public String config(Model model, HttpServletRequest request) {
         log.debug("Affichage de la page de configuration");
         
         model.addAttribute("title", "Angel Server - Configuration");
         model.addAttribute("config", config);
+        model.addAttribute("httpServletRequest", request);
         
         return "config";
     }
@@ -82,13 +89,15 @@ public class WebController {
      * Page à propos du serveur.
      * 
      * @param model le modèle pour la vue
+     * @param request la requête HTTP
      * @return nom de la vue à afficher
      */
     @GetMapping("/about")
-    public String about(Model model) {
+    public String about(Model model, HttpServletRequest request) {
         log.debug("Affichage de la page à propos");
         
         model.addAttribute("title", "Angel Server - À propos");
+        model.addAttribute("httpServletRequest", request);
         
         return "about";
     }
