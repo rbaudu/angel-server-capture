@@ -40,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Enregistre le point de terminaison "/ws" avec la politique SockJS activée
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("*")
+                .setAllowedOriginPatterns("*")  // Utiliser allowedOriginPatterns au lieu de allowedOrigins
                 .withSockJS();
     }
 }
