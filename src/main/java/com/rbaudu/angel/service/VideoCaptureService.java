@@ -132,7 +132,7 @@ public class VideoCaptureService {
             while (running.get() && !Thread.currentThread().isInterrupted()) {
                 Frame frame = grabber.grab();
                 
-                if (frame != null && !frame.image.isNull()) {
+                if (frame != null && frame.image != null) {
                     processFrame(frame);
                 }
                 
