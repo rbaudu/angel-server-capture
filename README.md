@@ -1,10 +1,10 @@
 # Angel Server Capture
 
-Serveur de capture, synchronisation et analyse de flux vidéo et audio en temps réel.
+Serveur de capture, synchronisation et analyse d'activités en temps réel à partir de flux vidéo et audio.
 
 ## Présentation
 
-Angel Server Capture est une application Spring Boot qui permet de capturer le flux vidéo d'une caméra et le flux audio d'un ordinateur Windows 11, de les synchroniser et de les afficher en temps réel. L'application inclut également des fonctionnalités d'analyse pour détecter la présence de personnes, les mouvements et les positions.
+Angel Server Capture est une application Spring Boot qui permet de capturer le flux vidéo d'une caméra et le flux audio d'un ordinateur Windows 11, de les synchroniser et de les afficher en temps réel. L'application intègre un système complet d'analyse d'activités pour détecter la présence de personnes et identifier les activités qu'elles réalisent (dormir, manger, lire, nettoyer, etc.).
 
 ## Fonctionnalités
 
@@ -13,14 +13,18 @@ Angel Server Capture est une application Spring Boot qui permet de capturer le f
 - Synchronisation des flux audio et vidéo
 - Visualisation en temps réel des flux via WebSocket
 - Interface utilisateur complète basée sur Thymeleaf, HTML, CSS et JavaScript
-- API REST pour le contrôle des services de capture
-- Analyse de base pour la détection de mouvement
-- Architecture extensible pour ajouter des fonctionnalités d'analyse avancées
+- API REST pour le contrôle des services de capture et l'accès aux résultats d'analyse
+- **Analyse avancée d'activités**:
+  - Détection de présence humaine
+  - Classification d'activités: dormir, manger, lire, nettoyer, regarder la télévision, téléphoner, tricoter, parler, jouer
+  - Fusion d'analyses audio et vidéo pour une détection plus précise
+  - Lissage temporel pour éviter les fluctuations dans la détection
 
 ## Technologies utilisées
 
 - **Backend** : Java 17, Spring Boot 3.2
 - **Capture média** : JavaCV, OpenCV, FFmpeg
+- **Analyse d'activités** : TensorFlow pour Java, TarsosDSP, DeepLearning4J
 - **Frontend** : Thymeleaf, HTML5, CSS3, JavaScript, Bootstrap 5
 - **Communication en temps réel** : WebSocket avec STOMP
 - **Build** : Maven
@@ -32,6 +36,7 @@ Angel Server Capture est une application Spring Boot qui permet de capturer le f
 - Une caméra connectée (webcam ou autre)
 - Windows 11 avec accès au flux audio du système
 - [OpenCV](https://opencv.org/) et [FFmpeg](https://ffmpeg.org/) (les dépendances sont gérées par Maven)
+- Modèles TensorFlow pour l'analyse d'activités (à placer dans le dossier `src/main/resources/models/`)
 
 ## Installation et démarrage
 
@@ -41,17 +46,24 @@ Angel Server Capture est une application Spring Boot qui permet de capturer le f
    cd angel-server-capture
    ```
 
-2. Construire le projet avec Maven :
+2. Ajouter les modèles TensorFlow nécessaires dans les dossiers :
+   ```
+   src/main/resources/models/human_detection/
+   src/main/resources/models/activity_recognition/
+   src/main/resources/models/audio_classification/
+   ```
+
+3. Construire le projet avec Maven :
    ```bash
    mvn clean package
    ```
 
-3. Lancer l'application :
+4. Lancer l'application :
    ```bash
    java -jar target/angel-server-capture-0.1.0-SNAPSHOT.jar
    ```
 
-4. Accéder à l'interface web :
+5. Accéder à l'interface web :
    ```
    http://localhost:8080/angel/
    ```
@@ -66,23 +78,37 @@ angel-server-capture/
 │   │   │   └── com/
 │   │   │       └── rbaudu/
 │   │   │           └── angel/
-│   │   │               ├── config/        # Configuration Spring Boot
-│   │   │               ├── controller/    # Contrôleurs REST et WebSocket
-│   │   │               ├── event/         # Classes d'événements
-│   │   │               ├── model/         # Modèles de données
-│   │   │               └── service/       # Services de capture et traitement
+│   │   │               ├── analyzer/            # Module d'analyse d'activités
+│   │   │               │   ├── config/          # Configuration de l'analyse
+│   │   │               │   ├── controller/      # API REST pour l'analyse
+│   │   │               │   ├── model/           # Modèles d'analyse
+│   │   │               │   ├── service/         # Services d'analyse
+│   │   │               │   │   ├── audio/       # Analyse audio
+│   │   │               │   │   ├── fusion/      # Fusion multimodale
+│   │   │               │   │   └── video/       # Analyse vidéo
+│   │   │               │   └── util/            # Utilitaires d'analyse
+│   │   │               ├── config/              # Configuration Spring Boot
+│   │   │               ├── controller/          # Contrôleurs REST et WebSocket
+│   │   │               ├── event/               # Classes d'événements
+│   │   │               ├── model/               # Modèles de données
+│   │   │               └── service/             # Services de capture et traitement
 │   │   └── resources/
-│   │       ├── static/              # Ressources statiques (CSS, JS, images)
-│   │       ├── templates/           # Templates Thymeleaf
-│   │       └── application.properties # Configuration de l'application
-│   └── test/                       # Tests unitaires et d'intégration
-└── pom.xml                        # Configuration Maven
+│   │       ├── models/                    # Modèles TensorFlow
+│   │       │   ├── human_detection/       # Modèle de détection de présence
+│   │       │   ├── activity_recognition/  # Modèle de reconnaissance d'activités
+│   │       │   └── audio_classification/  # Modèle de classification audio
+│   │       ├── static/                    # Ressources statiques (CSS, JS, images)
+│   │       ├── templates/                 # Templates Thymeleaf
+│   │       └── application.properties     # Configuration de l'application
+│   └── test/                              # Tests unitaires et d'intégration
+└── pom.xml                                # Configuration Maven
 ```
 
 ## Configuration
 
 La configuration principale se trouve dans le fichier `src/main/resources/application.properties`. Voici les principaux paramètres :
 
+### Capture vidéo et audio
 - `angel.capture.video.enabled` : Active/désactive la capture vidéo
 - `angel.capture.video.camera-index` : Index de la caméra à utiliser (0 pour la caméra par défaut)
 - `angel.capture.video.width` : Largeur de la capture vidéo
@@ -97,20 +123,121 @@ La configuration principale se trouve dans le fichier `src/main/resources/applic
 - `angel.sync.buffer-size` : Taille du buffer de synchronisation
 - `angel.sync.max-delay-ms` : Délai maximum de synchronisation en millisecondes
 
-- `angel.analysis.enabled` : Active/désactive l'analyse
-- `angel.analysis.motion-detection` : Active/désactive la détection de mouvement
-- `angel.analysis.person-detection` : Active/désactive la détection de personnes
-- `angel.analysis.position-tracking` : Active/désactive le suivi de position
+### Analyse d'activités
+- `angel.analyzer.humanDetectionModel` : Chemin vers le modèle de détection de présence humaine
+- `angel.analyzer.activityRecognitionModel` : Chemin vers le modèle de reconnaissance d'activités
+- `angel.analyzer.audioClassificationModel` : Chemin vers le modèle de classification audio
+- `angel.analyzer.captureIntervalMs` : Intervalle de capture en millisecondes
+- `angel.analyzer.presenceThreshold` : Seuil de confiance pour la détection de présence (entre 0.0 et 1.0)
+- `angel.analyzer.activityConfidenceThreshold` : Seuil de confiance pour la classification d'activités (entre 0.0 et 1.0)
+- `angel.analyzer.historySize` : Taille de l'historique pour le lissage temporel
+- `angel.analyzer.audioAnalysisEnabled` : Active/désactive l'analyse audio
 
-## Développement futur
+## API REST pour l'analyse d'activités
 
-Ce projet est actuellement en phase initiale et se concentre sur la capture, la synchronisation et l'affichage des flux. Les prochaines étapes de développement incluront :
+Le module d'analyse d'activités expose une API REST permettant de consulter les résultats d'analyse et configurer les paramètres. Voici les principaux endpoints :
 
-1. Amélioration des algorithmes de détection de personnes et de suivi de position
-2. Ajout de fonctionnalités d'enregistrement des flux
-3. Support pour plusieurs caméras et sources audio
-4. Interface de configuration plus complète
-5. Analyses avancées avec intelligence artificielle
+### Consultation des résultats d'analyse
+
+#### Récupérer la dernière analyse
+```
+GET /api/analysis/latest
+```
+Retourne le résultat d'analyse le plus récent.
+
+#### Récupérer les analyses récentes
+```
+GET /api/analysis/recent?limit=10
+```
+Retourne les N analyses les plus récentes (10 par défaut).
+
+#### Filtrer par type d'activité
+```
+GET /api/analysis/activity/{activityType}
+```
+Retourne les analyses correspondant à un type d'activité spécifique.
+Valeurs possibles pour `{activityType}` : 
+- `ABSENT` : Personne absente
+- `PRESENT_INACTIVE` : Personne présente mais inactive
+- `SLEEPING` : Personne en train de dormir
+- `EATING` : Personne en train de manger
+- `READING` : Personne en train de lire
+- `CLEANING` : Personne en train de nettoyer
+- `WATCHING_TV` : Personne en train de regarder la télévision
+- `CALLING` : Personne en train de téléphoner
+- `KNITTING` : Personne en train de tricoter
+- `TALKING` : Personne en train de parler
+- `PLAYING` : Personne en train de jouer
+- `UNKNOWN` : Activité inconnue
+
+### Configuration de l'analyse
+
+#### Récupérer la configuration actuelle
+```
+GET /api/analysis/config
+```
+Retourne la configuration actuelle du module d'analyse.
+
+#### Mettre à jour la configuration
+```
+POST /api/analysis/config
+Content-Type: application/json
+
+{
+  "audioAnalysisEnabled": true,
+  "presenceThreshold": 0.6,
+  "activityConfidenceThreshold": 0.7
+}
+```
+Met à jour partiellement la configuration du module d'analyse.
+
+## Exemples d'utilisation de l'API
+
+### Obtenir la dernière analyse
+```bash
+curl -X GET http://localhost:8080/api/analysis/latest
+```
+Réponse :
+```json
+{
+  "timestamp": "2025-03-19T14:30:45.123",
+  "activityType": "WATCHING_TV",
+  "confidence": 0.89,
+  "personPresent": true
+}
+```
+
+### Obtenir les 5 dernières analyses
+```bash
+curl -X GET http://localhost:8080/api/analysis/recent?limit=5
+```
+
+### Filtrer les résultats pour une activité spécifique
+```bash
+curl -X GET http://localhost:8080/api/analysis/activity/SLEEPING
+```
+
+### Activer ou désactiver l'analyse audio
+```bash
+curl -X POST http://localhost:8080/api/analysis/config \
+  -H "Content-Type: application/json" \
+  -d '{"audioAnalysisEnabled": false}'
+```
+
+## Fonctionnement technique
+
+Le module d'analyse fonctionne ainsi :
+
+1. Le service de capture vidéo capture des images et les stocke dans des objets `VideoFrame` avec la matrice OpenCV pour l'analyse.
+2. Le service de synchronisation combine les trames vidéo et les segments audio en objets `SynchronizedMedia`.
+3. Quand un nouveau média synchronisé est créé, un événement est publié.
+4. Le service d'analyse écoute ces événements et lance l'analyse :
+   - Détection de présence humaine dans l'image
+   - Classification d'activités basée sur l'analyse vidéo
+   - Détection de patterns audio (si l'analyse audio est activée)
+   - Fusion multimodale des résultats audio et vidéo
+   - Lissage temporel pour stabiliser les détections
+5. Les résultats sont stockés dans les objets média et publiés via l'API REST.
 
 ## Licence
 
