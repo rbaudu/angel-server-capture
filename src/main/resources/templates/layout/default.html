@@ -12,6 +12,36 @@
     <!-- CSS personnalisé -->
     <link rel="stylesheet" th:href="@{/css/main.css}">
     
+    <!-- Styles pour le logo -->
+    <style>
+        .logo-container {
+            height: 40px;
+            margin-right: 10px;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Styles pour l'animation du logo au survol */
+        .logo-container:hover .wing-left,
+        .logo-container:hover .wing-right {
+            filter: brightness(1.2);
+            transition: filter 0.3s ease;
+        }
+        
+        /* Style pour le pied de page */
+        footer {
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+        }
+        
+        footer .logo-container {
+            height: 30px;
+            margin-bottom: 10px;
+        }
+    </style>
+    
     <!-- Scripts additionnels pour la tête du document -->
     <th:block th:replace="${headScripts} ?: ~{}"></th:block>
 </head>
@@ -20,7 +50,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" th:href="@{/}">
-                <i class="fas fa-camera-retro"></i> Angel Server
+                <img th:src="@{/images/angel-logo.svg}" alt="AngeL Logo" class="logo-container" />
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,6 +93,9 @@
     <!-- Pied de page -->
     <footer class="bg-dark text-white mt-5 py-3">
         <div class="container text-center">
+            <div class="d-flex justify-content-center align-items-center mb-2">
+                <img th:src="@{/images/angel-logo.svg}" alt="AngeL Logo" class="logo-container" />
+            </div>
             <p>Angel Server Capture &copy; 2025 - Développé avec Spring Boot, Thymeleaf, OpenCV/JavaCV</p>
         </div>
     </footer>
