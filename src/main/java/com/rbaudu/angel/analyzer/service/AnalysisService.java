@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbaudu.angel.analyzer.config.AnalyzerConfig;
 import com.rbaudu.angel.analyzer.model.AnalysisResult;
+import com.rbaudu.angel.analyzer.model.AnalysisResultDto;
 import com.rbaudu.angel.event.SynchronizedMediaEvent;
 import com.rbaudu.angel.model.AudioChunk;
 import com.rbaudu.angel.model.SynchronizedMedia;
@@ -100,6 +101,12 @@ public class AnalysisService {
         // Extraire la frame vidéo de l'objet VideoFrame
         Mat frame = videoFrame.getFrameMat();
         
+        // Si la matrice d'image n'est pas disponible, on ne peut pas faire d'analyse
+        if (frame == null) {
+            log.debug("Pas d'analyse possible : la matrice d'image n'est pas disponible");
+            return AnalysisResult.unknownActivity();
+        }
+        
         // Préparer l'audio si disponible
         AudioInputStream audioStream = null;
         if (media.isHasAudio() && audioChunk != null && audioChunk.getAudioData() != null) {
@@ -154,8 +161,17 @@ public class AnalysisService {
      */
     private void updateMediaWithAnalysisResults(SynchronizedMedia media, AnalysisResult result) {
         try {
-            // Convertir le résultat d'analyse en JSON
-            String analysisJson = objectMapper.writeValueAsString(result);
+            // Mettre à jour les propriétés de détection sur VideoFrame si disponible
+            if (media.isHasVideo() && media.getVideoFrame() != null) {
+                VideoFrame videoFrame = media.getVideoFrame();
+                videoFrame.setPersonDetected(result.isPersonPresent());
+            }
+            
+            // Convertir le résultat d'analyse en DTO
+            AnalysisResultDto resultDto = AnalysisResultDto.fromAnalysisResult(result);
+            
+            // Convertir le DTO en JSON
+            String analysisJson = objectMapper.writeValueAsString(resultDto);
             
             // Mettre à jour le média avec les résultats d'analyse
             media.setAnalysisResults(analysisJson);
