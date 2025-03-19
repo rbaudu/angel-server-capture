@@ -22,4 +22,5 @@ public class AngelServerCaptureApplication {
     public static void main(String[] args) {
         SpringApplication.run(AngelServerCaptureApplication.class, args);
     }
+
 }

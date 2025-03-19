@@ -48,6 +48,7 @@ public class VideoCaptureService {
     private AtomicBoolean cameraAvailable;
     private int cameraRetryCount;
     private static final int MAX_RETRY_COUNT = 3;
+
     
     /**
      * Initialise le service de capture vidéo.
@@ -75,6 +76,7 @@ public class VideoCaptureService {
         } catch (Exception e) {
             log.error("Erreur lors de l'initialisation du service de capture vidéo", e);
             cameraAvailable.set(false);
+
         }
     }
     

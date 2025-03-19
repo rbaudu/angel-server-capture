@@ -40,8 +40,7 @@ public class WebController {
         model.addAttribute("audioEnabled", config.isAudioEnabled());
         model.addAttribute("analysisEnabled", config.isAnalysisEnabled());
         model.addAttribute("isRunning", captureServiceManager.isRunning());
-        model.addAttribute("httpServletRequest", request);
-        
+        model.addAttribute("httpServletRequest", request);        
         return "home";
     }
     
@@ -63,7 +62,7 @@ public class WebController {
         model.addAttribute("videoHeight", config.getVideoHeight());
         model.addAttribute("isRunning", captureServiceManager.isRunning());
         model.addAttribute("httpServletRequest", request);
-        
+       
         return "live";
     }
     
@@ -80,8 +79,7 @@ public class WebController {
         
         model.addAttribute("title", "Angel Server - Configuration");
         model.addAttribute("config", config);
-        model.addAttribute("httpServletRequest", request);
-        
+        model.addAttribute("httpServletRequest", request);        
         return "config";
     }
     
@@ -97,8 +95,7 @@ public class WebController {
         log.debug("Affichage de la page à propos");
         
         model.addAttribute("title", "Angel Server - À propos");
-        model.addAttribute("httpServletRequest", request);
-        
+        model.addAttribute("httpServletRequest", request);        
         return "about";
     }
 }
