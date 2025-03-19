@@ -29,22 +29,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/}" th:classappend="${#httpServletRequest.getRequestURI() == '/' ? 'active' : ''}">
+                        <a class="nav-link" th:href="@{/}" th:classappend="${httpServletRequest != null && httpServletRequest.getRequestURI() == '/angel/' ? 'active' : ''}">
                             <i class="fas fa-home"></i> Accueil
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/live}" th:classappend="${#httpServletRequest.getRequestURI() == '/live' ? 'active' : ''}">
+                        <a class="nav-link" th:href="@{/live}" th:classappend="${httpServletRequest != null && httpServletRequest.getRequestURI() == '/angel/live' ? 'active' : ''}">
                             <i class="fas fa-video"></i> Visualisation
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/config}" th:classappend="${#httpServletRequest.getRequestURI() == '/config' ? 'active' : ''}">
+                        <a class="nav-link" th:href="@{/config}" th:classappend="${httpServletRequest != null && httpServletRequest.getRequestURI() == '/angel/config' ? 'active' : ''}">
                             <i class="fas fa-cog"></i> Configuration
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/about}" th:classappend="${#httpServletRequest.getRequestURI() == '/about' ? 'active' : ''}">
+                        <a class="nav-link" th:href="@{/about}" th:classappend="${httpServletRequest != null && httpServletRequest.getRequestURI() == '/angel/about' ? 'active' : ''}">
                             <i class="fas fa-info-circle"></i> À propos
                         </a>
                     </li>
