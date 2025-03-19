@@ -1,25 +1,44 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org" lang="fr"
+      th:replace="~{layout/default :: html (content=~{::content}, headScripts=~{::headScripts}, bodyScripts=~{::bodyScripts})}">
+
 <head>
-    <title>Configuration</title>
-    <!-- Les éléments de l'entête seront injectés par le template principal -->
+    <th:block th:fragment="headScripts">
+        <!-- Scripts spécifiques pour la tête du document -->
+    </th:block>
 </head>
+
 <body>
     <!-- Le contenu sera injecté dans le template principal -->
     <div th:fragment="content">
         <div class="row mb-4">
             <div class="col-12">
-                <h1 class="h3 mb-3">Configuration du serveur</h1>
-                <p class="lead">Consultez et ajustez les paramètres de configuration du serveur de capture.</p>
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="h3 mb-0">
+                            <i class="fas fa-cog"></i> Configuration du serveur
+                        </h1>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">Consultez et ajustez les paramètres de configuration du serveur de capture.</p>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Les paramètres de configuration sont actuellement en lecture seule. La modification des paramètres sera disponible dans une future version.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="row">
             <!-- Configuration vidéo -->
             <div class="col-lg-6 mb-4">
-                <div class="card h-100">
+                <div class="card h-100 border-primary">
                     <div class="card-header bg-primary text-white">
-                        <h2 class="h5 mb-0">Configuration vidéo</h2>
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-video me-2"></i>Configuration vidéo
+                        </h2>
                     </div>
                     <div class="card-body">
                         <div class="form-check form-switch mb-3">
@@ -28,19 +47,31 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Indice de caméra</label>
-                            <input type="number" class="form-control" th:value="${config.cameraIndex}" readonly>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-camera"></i></span>
+                                <input type="number" class="form-control" th:value="${config.cameraIndex}" readonly>
+                            </div>
+                            <small class="text-muted">Numéro de la caméra à utiliser (0 pour la caméra par défaut)</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Résolution</label>
                             <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-expand"></i></span>
                                 <input type="number" class="form-control" th:value="${config.videoWidth}" readonly>
                                 <span class="input-group-text">×</span>
                                 <input type="number" class="form-control" th:value="${config.videoHeight}" readonly>
+                                <span class="input-group-text">px</span>
                             </div>
+                            <small class="text-muted">Largeur et hauteur en pixels</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Images par seconde (FPS)</label>
-                            <input type="number" class="form-control" th:value="${config.videoFps}" readonly>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-tachometer-alt"></i></span>
+                                <input type="number" class="form-control" th:value="${config.videoFps}" readonly>
+                                <span class="input-group-text">FPS</span>
+                            </div>
+                            <small class="text-muted">Nombre d'images capturées par seconde</small>
                         </div>
                     </div>
                 </div>
@@ -48,9 +79,11 @@
             
             <!-- Configuration audio -->
             <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h2 class="h5 mb-0">Configuration audio</h2>
+                <div class="card h-100 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-volume-up me-2"></i>Configuration audio
+                        </h2>
                     </div>
                     <div class="card-body">
                         <div class="form-check form-switch mb-3">
@@ -59,15 +92,28 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Indice de périphérique</label>
-                            <input type="number" class="form-control" th:value="${config.audioDeviceIndex}" readonly>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-microphone"></i></span>
+                                <input type="number" class="form-control" th:value="${config.audioDeviceIndex}" readonly>
+                            </div>
+                            <small class="text-muted">Numéro du périphérique audio à utiliser (0 pour le microphone par défaut)</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Taux d'échantillonnage (Hz)</label>
-                            <input type="number" class="form-control" th:value="${config.audioSampleRate}" readonly>
+                            <label class="form-label">Taux d'échantillonnage</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-wave-square"></i></span>
+                                <input type="number" class="form-control" th:value="${config.audioSampleRate}" readonly>
+                                <span class="input-group-text">Hz</span>
+                            </div>
+                            <small class="text-muted">Fréquence d'échantillonnage en Hertz (typiquement 44100 Hz)</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Canaux</label>
-                            <input type="number" class="form-control" th:value="${config.audioChannels}" readonly>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-headphones"></i></span>
+                                <input type="number" class="form-control" th:value="${config.audioChannels}" readonly>
+                            </div>
+                            <small class="text-muted">Nombre de canaux audio (1 pour mono, 2 pour stéréo)</small>
                         </div>
                     </div>
                 </div>
@@ -75,18 +121,30 @@
             
             <!-- Configuration synchronisation -->
             <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h2 class="h5 mb-0">Configuration de synchronisation</h2>
+                <div class="card h-100 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-sync me-2"></i>Configuration de synchronisation
+                        </h2>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label">Taille du tampon</label>
-                            <input type="number" class="form-control" th:value="${config.syncBufferSize}" readonly>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
+                                <input type="number" class="form-control" th:value="${config.syncBufferSize}" readonly>
+                                <span class="input-group-text">trames</span>
+                            </div>
+                            <small class="text-muted">Nombre de trames conservées dans le tampon de synchronisation</small>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Délai maximal (ms)</label>
-                            <input type="number" class="form-control" th:value="${config.syncMaxDelayMs}" readonly>
+                            <label class="form-label">Délai maximal</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                <input type="number" class="form-control" th:value="${config.syncMaxDelayMs}" readonly>
+                                <span class="input-group-text">ms</span>
+                            </div>
+                            <small class="text-muted">Délai maximal admissible entre les flux audio et vidéo en millisecondes</small>
                         </div>
                     </div>
                 </div>
@@ -94,9 +152,11 @@
             
             <!-- Configuration analyse -->
             <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h2 class="h5 mb-0">Configuration d'analyse</h2>
+                <div class="card h-100 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Configuration d'analyse
+                        </h2>
                     </div>
                     <div class="card-body">
                         <div class="form-check form-switch mb-3">
@@ -105,25 +165,53 @@
                         </div>
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" id="motionDetection" th:checked="${config.motionDetectionEnabled}" disabled>
-                            <label class="form-check-label" for="motionDetection">Détection de mouvement</label>
+                            <label class="form-check-label" for="motionDetection">
+                                <i class="fas fa-running me-1"></i> Détection de mouvement
+                            </label>
+                            <small class="d-block text-muted">Détecte tout mouvement dans l'image</small>
                         </div>
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" id="personDetection" th:checked="${config.personDetectionEnabled}" disabled>
-                            <label class="form-check-label" for="personDetection">Détection de personnes</label>
+                            <label class="form-check-label" for="personDetection">
+                                <i class="fas fa-user me-1"></i> Détection de personnes
+                            </label>
+                            <small class="d-block text-muted">Identifie les personnes dans l'image</small>
                         </div>
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" id="positionTracking" th:checked="${config.positionTrackingEnabled}" disabled>
-                            <label class="form-check-label" for="positionTracking">Suivi de position</label>
+                            <label class="form-check-label" for="positionTracking">
+                                <i class="fas fa-crosshairs me-1"></i> Suivi de position
+                            </label>
+                            <small class="d-block text-muted">Suit la position des objets détectés</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            Les paramètres de configuration sont actuellement en lecture seule. La modification des paramètres sera disponible dans une future version.
-        </div>
     </div>
+    
+    <th:block th:fragment="bodyScripts">
+        <!-- Scripts spécifiques pour le pied du document -->
+        <script th:inline="javascript">
+            $(document).ready(function() {
+                // Ajouter une classe active aux formulaires quand ils sont en focus
+                $('.form-control').focus(function() {
+                    $(this).closest('.card').addClass('shadow-sm');
+                }).blur(function() {
+                    $(this).closest('.card').removeClass('shadow-sm');
+                });
+                
+                // Animation des icônes pour montrer que la page est interactive même si elle est readonly
+                $('.card-header i').hover(
+                    function() { 
+                        $(this).addClass('fa-spin-pulse'); 
+                    },
+                    function() { 
+                        $(this).removeClass('fa-spin-pulse'); 
+                    }
+                );
+            });
+        </script>
+    </th:block>
 </body>
 </html>
