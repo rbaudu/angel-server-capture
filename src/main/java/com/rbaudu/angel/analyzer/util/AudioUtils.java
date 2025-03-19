@@ -4,6 +4,16 @@ import org.springframework.stereotype.Component;
 import org.tensorflow.Tensor;
 import org.tensorflow.types.TFloat32;
 
+// Imports pour TarsosDSP via JitPack
+import be.tarsos.dsp.AudioDispatcher;
+import be.tarsos.dsp.AudioEvent;
+import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
+import be.tarsos.dsp.mfcc.MFCC;
+import be.tarsos.dsp.pitch.PitchDetectionHandler;
+import be.tarsos.dsp.pitch.PitchDetectionResult;
+import be.tarsos.dsp.pitch.PitchProcessor;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -13,6 +23,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utilitaires pour le traitement audio.
@@ -95,27 +107,81 @@ public class AudioUtils {
     
     /**
      * Convertit des échantillons audio PCM en MFCC (Mel-Frequency Cepstral Coefficients)
-     * Note: Cette implémentation est simplifiée et utiliserait normalement TarsosDSP
+     * en utilisant TarsosDSP
      * @param audioData Données audio PCM
      * @param sampleRate Taux d'échantillonnage
      * @param numCoefficients Nombre de coefficients MFCC à extraire
      * @return Tableau des coefficients MFCC
      */
     public float[] extractMFCC(byte[] audioData, float sampleRate, int numCoefficients) {
-        // Cette méthode serait normalement implémentée avec TarsosDSP
-        // Exemple simplifié pour l'illustration
-        
-        // Convertir les bytes en échantillons flottants
-        float[] samples = pcmToFloat(audioData);
-        
-        // Ici, nous utiliserions TarsosDSP pour extraire les MFCC
-        // Pour l'instant, retournons des valeurs fictives
-        float[] mfcc = new float[numCoefficients];
-        for (int i = 0; i < numCoefficients; i++) {
-            mfcc[i] = 0.0f; // À remplacer par l'implémentation réelle
+        try {
+            // Convertir les bytes en échantillons flottants
+            float[] samples = pcmToFloat(audioData);
+            
+            // Créer un format audio pour TarsosDSP
+            AudioFormat format = new AudioFormat(sampleRate, 16, 1, true, false);
+            
+            // Créer un flux audio à partir des échantillons
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(baos);
+            for (float sample : samples) {
+                dos.writeShort((short) (sample * 32767.0f));
+            }
+            byte[] bytes = baos.toByteArray();
+            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+            AudioInputStream audioStream = new AudioInputStream(bais, format, bytes.length / format.getFrameSize());
+            
+            // Configuration de TarsosDSP pour l'extraction MFCC
+            final List<float[]> mfccValues = new ArrayList<>();
+            
+            AudioDispatcher dispatcher = new AudioDispatcher(
+                    new JVMAudioInputStream(audioStream),
+                    1024, 512);
+            
+            MFCC mfcc = new MFCC(1024, (int) sampleRate, numCoefficients, 40, 300, 3000);
+            dispatcher.addAudioProcessor(mfcc);
+            dispatcher.addAudioProcessor(new AudioProcessor() {
+                @Override
+                public boolean process(AudioEvent audioEvent) {
+                    mfccValues.add(mfcc.getMFCC());
+                    return true;
+                }
+                
+                @Override
+                public void processingFinished() {
+                    // Rien à faire
+                }
+            });
+            
+            // Exécution du traitement
+            dispatcher.run();
+            
+            // Calcul de la moyenne des MFCC sur tous les frames
+            if (mfccValues.isEmpty()) {
+                return new float[numCoefficients];
+            }
+            
+            float[] avgMfcc = new float[numCoefficients];
+            for (float[] mfccValue : mfccValues) {
+                for (int i = 0; i < numCoefficients; i++) {
+                    avgMfcc[i] += mfccValue[i];
+                }
+            }
+            
+            for (int i = 0; i < numCoefficients; i++) {
+                avgMfcc[i] /= mfccValues.size();
+            }
+            
+            return avgMfcc;
+            
+        } catch (Exception e) {
+            // En cas d'erreur, retourner des valeurs par défaut
+            float[] mfcc = new float[numCoefficients];
+            for (int i = 0; i < numCoefficients; i++) {
+                mfcc[i] = 0.0f;
+            }
+            return mfcc;
         }
-        
-        return mfcc;
     }
     
     /**
@@ -152,5 +218,14 @@ public class AudioUtils {
         floatBuffer.rewind();
         
         return TFloat32.tensorOf(org.tensorflow.Shape.of(1, audioData.length), floatBuffer);
+    }
+    
+    /**
+     * Classe interne pour écrire des données au format DataOutputStream
+     */
+    private static class DataOutputStream extends java.io.DataOutputStream {
+        public DataOutputStream(ByteArrayOutputStream out) {
+            super(out);
+        }
     }
 }
