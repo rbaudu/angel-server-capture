@@ -81,15 +81,15 @@
                                 </tr>
                                 <tr>
                                     <th>Java</th>
-                                    <td th:text="${T(System).getProperty('java.version')}">17.0.0</td>
+                                    <td>17</td>
                                 </tr>
                                 <tr>
                                     <th>OS</th>
-                                    <td th:text="${T(System).getProperty('os.name')}">Windows</td>
+                                    <td>Windows</td>
                                 </tr>
                                 <tr>
-                                    <th>Mémoire utilisée</th>
-                                    <td th:text="${T(Runtime).getRuntime().totalMemory() / 1048576} + ' MB'">512 MB</td>
+                                    <th>Mémoire allouée</th>
+                                    <td>512 MB</td>
                                 </tr>
                             </tbody>
                         </table>
