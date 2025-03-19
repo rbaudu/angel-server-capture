@@ -18,30 +18,42 @@
     
     <!-- Styles pour le logo -->
     <style>
-        .logo-container {
-            height: 40px;
-            margin-right: 10px;
+        /* Style pour la barre de navigation */
+        .navbar {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
         }
+        
+        /* Style pour le logo dans la barre de navigation */
+        .navbar-logo {
+            height: 60px;
+            margin-right: 15px;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        
         .navbar-brand {
             display: flex;
             align-items: center;
-        }
-        
-        /* Styles pour l'animation du logo au survol */
-        .logo-container:hover {
-            filter: brightness(1.2);
-            transition: filter 0.3s ease;
+            padding: 0;
         }
         
         /* Style pour le pied de page */
         footer {
             margin-top: 3rem;
-            padding: 1.5rem 0;
+            padding: 1.8rem 0;
         }
         
-        footer .logo-container {
-            height: 30px;
-            margin-bottom: 10px;
+        /* Style pour le logo dans le pied de page */
+        .footer-logo {
+            height: 50px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        
+        /* Styles pour l'animation du logo au survol */
+        .navbar-logo:hover, .footer-logo:hover {
+            filter: brightness(1.2);
+            transform: scale(1.05);
         }
     </style>
     
@@ -53,7 +65,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" th:href="@{/}">
-                <img th:src="@{/images/angel-logo.svg}" alt="AngeL Logo" class="logo-container" />
+                <img th:src="@{/images/angel-logo.svg}" alt="AngeL Logo" class="navbar-logo" />
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,8 +108,8 @@
     <!-- Pied de page -->
     <footer class="bg-dark text-white mt-5 py-3">
         <div class="container text-center">
-            <div class="d-flex justify-content-center align-items-center mb-2">
-                <img th:src="@{/images/angel-logo.svg}" alt="AngeL Logo" class="logo-container" />
+            <div class="d-flex justify-content-center align-items-center mb-3">
+                <img th:src="@{/images/angel-logo.svg}" alt="AngeL Logo" class="footer-logo" />
             </div>
             <p>Angel Server Capture &copy; 2025 - Développé avec Spring Boot, Thymeleaf, OpenCV/JavaCV</p>
         </div>
