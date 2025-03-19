@@ -22,7 +22,7 @@
         <opencv.version>4.7.0-1.5.9</opencv.version>
         <ffmpeg.version>6.0-1.5.9</ffmpeg.version>
         <tensorflow.version>0.5.0</tensorflow.version>
-        <tarsosdsp.version>2.5</tarsosdsp.version>
+        <tarsosdsp.version>2.4</tarsosdsp.version>
         <dl4j.version>1.0.0-M2.1</dl4j.version>
     </properties>
     
@@ -91,7 +91,7 @@
         <!-- TarsosDSP for audio processing -->
         <dependency>
             <groupId>be.tarsos.dsp</groupId>
-            <artifactId>core</artifactId>
+            <artifactId>tarsos-dsp</artifactId>
             <version>${tarsosdsp.version}</version>
         </dependency>
         
@@ -121,4 +121,12 @@
             </plugin>
         </plugins>
     </build>
+    
+    <!-- Repositories -->
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 </project>
