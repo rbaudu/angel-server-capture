@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>À propos</title>
+    <!-- Les éléments de l'entête seront injectés par le template principal -->
+</head>
+<body>
+    <!-- Le contenu sera injecté dans le template principal -->
+    <div th:fragment="content">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="h3 mb-3">À propos d'Angel Server</h1>
+                <p class="lead">Serveur de capture, synchronisation et analyse de flux vidéo et audio.</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Présentation</h2>
+                    </div>
+                    <div class="card-body">
+                        <p>Angel Server est une application dédiée à la capture, synchronisation et analyse de flux vidéo et audio en temps réel. Développée en Java avec Spring Boot, elle utilise les bibliothèques OpenCV et JavaCV pour le traitement vidéo.</p>
+                        
+                        <p>Cette application permet :</p>
+                        <ul>
+                            <li>La capture vidéo depuis des caméras connectées</li>
+                            <li>La capture audio depuis des microphones</li>
+                            <li>La synchronisation précise des flux vidéo et audio</li>
+                            <li>L'analyse en temps réel des flux (détection de mouvement, de personnes, etc.)</li>
+                            <li>La visualisation en direct des flux capturés</li>
+                        </ul>
+                        
+                        <p>L'architecture modulaire d'Angel Server facilite son extension avec de nouvelles fonctionnalités d'analyse ou de traitement.</p>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Technologies utilisées</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3 class="h6">Backend</h3>
+                                <ul>
+                                    <li>Java 17</li>
+                                    <li>Spring Boot 3.2</li>
+                                    <li>Spring WebSocket</li>
+                                    <li>JavaCV / OpenCV</li>
+                                    <li>FFmpeg (pour le traitement audio)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h3 class="h6">Frontend</h3>
+                                <ul>
+                                    <li>Thymeleaf</li>
+                                    <li>Bootstrap 5</li>
+                                    <li>JavaScript / jQuery</li>
+                                    <li>SockJS / STOMP</li>
+                                    <li>Font Awesome</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Informations système</h2>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th>Version</th>
+                                    <td>0.1.0-SNAPSHOT</td>
+                                </tr>
+                                <tr>
+                                    <th>Java</th>
+                                    <td th:text="${T(System).getProperty('java.version')}">17.0.0</td>
+                                </tr>
+                                <tr>
+                                    <th>OS</th>
+                                    <td th:text="${T(System).getProperty('os.name')}">Windows</td>
+                                </tr>
+                                <tr>
+                                    <th>Mémoire utilisée</th>
+                                    <td th:text="${T(Runtime).getRuntime().totalMemory() / 1048576} + ' MB'">512 MB</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Licence</h2>
+                    </div>
+                    <div class="card-body">
+                        <p>Angel Server est distribué sous licence open source MIT.</p>
+                        <p>Copyright © 2025</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Liens</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="https://github.com/rbaudu/angel-server-capture" class="list-group-item list-group-item-action" target="_blank">
+                                <i class="fab fa-github me-2"></i> Dépôt GitHub
+                            </a>
+                            <a href="https://docs.opencv.org/" class="list-group-item list-group-item-action" target="_blank">
+                                <i class="fas fa-book me-2"></i> Documentation OpenCV
+                            </a>
+                            <a href="https://spring.io/projects/spring-boot" class="list-group-item list-group-item-action" target="_blank">
+                                <i class="fas fa-leaf me-2"></i> Spring Boot
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
