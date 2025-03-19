@@ -214,6 +214,7 @@ public class VideoCaptureService {
                     .format("jpg")
                     .motionDetected(false) // Sera mis à jour par le service d'analyse
                     .personDetected(false) // Sera mis à jour par le service d'analyse
+                    .frameMat(mat.clone()) // Stocker une copie de la matrice pour l'analyse
                     .build();
             
             // Publier l'événement
