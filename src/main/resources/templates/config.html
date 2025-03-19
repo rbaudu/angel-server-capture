@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Configuration</title>
+    <!-- Les éléments de l'entête seront injectés par le template principal -->
+</head>
+<body>
+    <!-- Le contenu sera injecté dans le template principal -->
+    <div th:fragment="content">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="h3 mb-3">Configuration du serveur</h1>
+                <p class="lead">Consultez et ajustez les paramètres de configuration du serveur de capture.</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Configuration vidéo -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Configuration vidéo</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="videoEnabled" th:checked="${videoEnabled}" disabled>
+                            <label class="form-check-label" for="videoEnabled">Capture vidéo activée</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Indice de caméra</label>
+                            <input type="number" class="form-control" th:value="${config.cameraIndex}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Résolution</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" th:value="${config.videoWidth}" readonly>
+                                <span class="input-group-text">×</span>
+                                <input type="number" class="form-control" th:value="${config.videoHeight}" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Images par seconde (FPS)</label>
+                            <input type="number" class="form-control" th:value="${config.videoFps}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configuration audio -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Configuration audio</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="audioEnabled" th:checked="${audioEnabled}" disabled>
+                            <label class="form-check-label" for="audioEnabled">Capture audio activée</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Indice de périphérique</label>
+                            <input type="number" class="form-control" th:value="${config.audioDeviceIndex}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Taux d'échantillonnage (Hz)</label>
+                            <input type="number" class="form-control" th:value="${config.audioSampleRate}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Canaux</label>
+                            <input type="number" class="form-control" th:value="${config.audioChannels}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configuration synchronisation -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Configuration de synchronisation</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Taille du tampon</label>
+                            <input type="number" class="form-control" th:value="${config.syncBufferSize}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Délai maximal (ms)</label>
+                            <input type="number" class="form-control" th:value="${config.syncMaxDelayMs}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configuration analyse -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0">Configuration d'analyse</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="analysisEnabled" th:checked="${analysisEnabled}" disabled>
+                            <label class="form-check-label" for="analysisEnabled">Analyse activée</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="motionDetection" th:checked="${config.motionDetectionEnabled}" disabled>
+                            <label class="form-check-label" for="motionDetection">Détection de mouvement</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="personDetection" th:checked="${config.personDetectionEnabled}" disabled>
+                            <label class="form-check-label" for="personDetection">Détection de personnes</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="positionTracking" th:checked="${config.positionTrackingEnabled}" disabled>
+                            <label class="form-check-label" for="positionTracking">Suivi de position</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            Les paramètres de configuration sont actuellement en lecture seule. La modification des paramètres sera disponible dans une future version.
+        </div>
+    </div>
+</body>
+</html>
