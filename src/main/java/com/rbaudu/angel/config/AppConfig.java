@@ -8,14 +8,11 @@ import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import lombok.Getter;
-
 /**
  * Configuration générale de l'application.
  * Cette classe centralise la configuration des différents composants et paramètres.
  */
 @Configuration
-@Getter
 public class AppConfig implements WebMvcConfigurer {
 
     // Configuration de la capture vidéo
@@ -66,6 +63,69 @@ public class AppConfig implements WebMvcConfigurer {
 
     @Value("${angel.analysis.position-tracking:false}")
     private boolean positionTrackingEnabled;
+
+    /**
+     * Getters pour les propriétés
+     */
+    public boolean isVideoEnabled() {
+        return videoEnabled;
+    }
+
+    public int getCameraIndex() {
+        return cameraIndex;
+    }
+
+    public int getVideoWidth() {
+        return videoWidth;
+    }
+
+    public int getVideoHeight() {
+        return videoHeight;
+    }
+
+    public int getVideoFps() {
+        return videoFps;
+    }
+
+    public boolean isAudioEnabled() {
+        return audioEnabled;
+    }
+
+    public int getAudioDeviceIndex() {
+        return audioDeviceIndex;
+    }
+
+    public int getAudioSampleRate() {
+        return audioSampleRate;
+    }
+
+    public int getAudioChannels() {
+        return audioChannels;
+    }
+
+    public int getSyncBufferSize() {
+        return syncBufferSize;
+    }
+
+    public int getSyncMaxDelayMs() {
+        return syncMaxDelayMs;
+    }
+
+    public boolean isAnalysisEnabled() {
+        return analysisEnabled;
+    }
+
+    public boolean isMotionDetectionEnabled() {
+        return motionDetectionEnabled;
+    }
+
+    public boolean isPersonDetectionEnabled() {
+        return personDetectionEnabled;
+    }
+
+    public boolean isPositionTrackingEnabled() {
+        return positionTrackingEnabled;
+    }
 
     /**
      * Configure le pool de threads pour les tâches asynchrones.
