@@ -1,19 +1,20 @@
 package com.rbaudu.angel.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service gestionnaire qui coordonne le démarrage et l'arrêt des services de capture.
  */
 @Service
-@Slf4j
 public class CaptureServiceManager {
+    private static final Logger log = LoggerFactory.getLogger(CaptureServiceManager.class);
 
     @Autowired
     private VideoCaptureService videoCaptureService;
