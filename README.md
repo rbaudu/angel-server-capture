@@ -133,6 +133,65 @@ La configuration principale se trouve dans le fichier `src/main/resources/applic
 - `angel.analyzer.historySize` : Taille de l'historique pour le lissage temporel
 - `angel.analyzer.audioAnalysisEnabled` : Active/désactive l'analyse audio
 
+## Détection de présence humaine
+
+### Modèles de détection de présence
+
+Plusieurs approches sont disponibles pour la détection de présence humaine :
+
+1. **Modèle MobileNet-SSD** (recommandé) :
+   - Modèle léger et rapide, idéal pour les applications temps réel
+   - Pré-entraîné sur le dataset COCO (classe 1 = "personne")
+   - Peut être téléchargé depuis [TensorFlow Model Zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md)
+   - Modèle recommandé : "SSD MobileNet v2 FPNLite 320x320"
+
+2. **HOG (Histograms of Oriented Gradients) + SVM** :
+   - Approche classique via OpenCV
+   - Plus léger mais moins précis que les modèles de deep learning
+   - Implémentation en fallback dans la classe `PresenceDetector`
+
+3. **Cascade Classifier pour la détection de visages** :
+   - Solution simple basée sur OpenCV
+   - Utilise des classificateurs en cascade de type Haar
+   - Fonctionne bien dans des conditions contrôlées
+
+### Intégration du modèle
+
+Pour installer un modèle de détection de présence humaine :
+
+1. Téléchargez le modèle SSD MobileNet depuis TensorFlow Model Zoo
+2. Décompressez-le dans `src/main/resources/models/human_detection/`
+3. Configurez le chemin dans `application.properties` :
+
+```properties
+angel.analyzer.humanDetectionModel=models/human_detection/saved_model
+```
+
+### Personnalisation de la détection
+
+Vous pouvez ajuster les paramètres de détection dans `application.properties` :
+
+```properties
+# Seuil de confiance pour la détection (entre 0.0 et 1.0)
+angel.analyzer.presenceThreshold=0.5
+
+# Intervalle de détection (en ms)
+angel.analyzer.captureIntervalMs=1000
+```
+
+Un seuil plus élevé réduit les faux positifs mais peut manquer des détections réelles. Un seuil plus bas détecte plus facilement les personnes mais avec plus de faux positifs.
+
+### Optimisation des performances
+
+Pour améliorer les performances de la détection :
+
+1. **Redimensionnement des images** : Traitez les images en résolution réduite (320x320)
+2. **Mise en cache** : Analysez seulement une frame sur N (par exemple 1 sur 5)
+3. **Solution de secours** : Utilisez HOG+SVM si TensorFlow ne peut pas être initialisé
+4. **Lissage temporel** : Conservez les N derniers résultats et décidez par vote majoritaire
+
+Ces optimisations sont implémentées dans la classe `PresenceDetector`.
+
 ## API REST pour l'analyse d'activités
 
 Le module d'analyse d'activités expose une API REST permettant de consulter les résultats d'analyse et configurer les paramètres. Voici les principaux endpoints :
@@ -191,6 +250,23 @@ Content-Type: application/json
 ```
 Met à jour partiellement la configuration du module d'analyse.
 
+### Test de la détection de présence
+
+Vous pouvez tester la détection de présence avec l'endpoint suivant :
+
+```
+GET /api/analysis/test-detection
+```
+
+Retourne un résultat tel que :
+```json
+{
+  "personDetected": true,
+  "confidence": 0.89,
+  "detectionTimeMs": 125
+}
+```
+
 ## Exemples d'utilisation de l'API
 
 ### Obtenir la dernière analyse
@@ -238,6 +314,47 @@ Le module d'analyse fonctionne ainsi :
    - Fusion multimodale des résultats audio et vidéo
    - Lissage temporel pour stabiliser les détections
 5. Les résultats sont stockés dans les objets média et publiés via l'API REST.
+
+## Dépannage et conseils de développement
+
+### Problèmes de dépendances
+
+Si vous rencontrez des erreurs liées aux dépendances TensorFlow ou TarsosDSP :
+
+1. Pour TarsosDSP, utilisez cette dépendance via JitPack :
+   ```xml
+   <dependency>
+       <groupId>com.github.axet</groupId>
+       <artifactId>TarsosDSP</artifactId>
+       <version>2.4</version>
+   </dependency>
+   ```
+
+2. Pour javax.annotation.PostConstruct :
+   ```xml
+   <dependency>
+       <groupId>javax.annotation</groupId>
+       <artifactId>javax.annotation-api</artifactId>
+       <version>1.3.2</version>
+   </dependency>
+   ```
+
+3. Ajoutez le référentiel JitPack :
+   ```xml
+   <repositories>
+       <repository>
+           <id>jitpack.io</id>
+           <url>https://jitpack.io</url>
+       </repository>
+   </repositories>
+   ```
+
+### Optimisation des performances
+
+- Réduisez la résolution des images avant l'analyse
+- Utilisez un système de cache pour éviter d'analyser chaque frame
+- Implémentez un fallback vers des méthodes plus simples si les modèles TensorFlow ne peuvent pas être chargés
+- Utilisez le lissage temporel pour éviter les changements brusques dans les détections
 
 ## Licence
 
