@@ -1,5 +1,7 @@
 package com.rbaudu.angel.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -12,14 +14,12 @@ import com.rbaudu.angel.model.VideoFrame;
 import com.rbaudu.angel.service.CaptureServiceManager;
 import com.rbaudu.angel.service.MediaEventPublisher;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Contrôleur WebSocket pour la communication en temps réel.
  */
 @Controller
-@Slf4j
 public class WebSocketController {
+    private static final Logger log = LoggerFactory.getLogger(WebSocketController.class);
     
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
