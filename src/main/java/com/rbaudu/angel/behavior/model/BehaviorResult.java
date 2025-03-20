@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Résultat d'une analyse de comportement.
@@ -73,6 +74,7 @@ public class BehaviorResult {
      */
     public static BehaviorResult unknownBehavior() {
         return BehaviorResult.builder()
+                .id(UUID.randomUUID().toString())
                 .behaviorType(BehaviorType.UNKNOWN)
                 .confidence(0.0)
                 .timestamp(Instant.now())
@@ -84,6 +86,7 @@ public class BehaviorResult {
      */
     public static BehaviorResult normalBehavior(double confidence) {
         return BehaviorResult.builder()
+                .id(UUID.randomUUID().toString())
                 .behaviorType(BehaviorType.NORMAL)
                 .confidence(confidence)
                 .timestamp(Instant.now())
