@@ -12,7 +12,7 @@
     <groupId>com.rbaudu</groupId>
     <artifactId>angel-server-capture</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <n>angel-server-capture</n>
+    <name>angel-server-capture</name>
     <description>Serveur de capture, synchronisation et analyse de flux vidéo et audio</description>
     
     <properties>
