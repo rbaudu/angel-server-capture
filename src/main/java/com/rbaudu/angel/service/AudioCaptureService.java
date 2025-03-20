@@ -15,6 +15,8 @@ import javax.sound.sampled.TargetDataLine;
 
 import org.bytedeco.ffmpeg.global.avcodec;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,15 +25,15 @@ import com.rbaudu.angel.model.AudioChunk;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service responsable de la capture des flux audio.
  * Utilise JavaSound et FFmpeg pour capturer l'audio du système.
  */
 @Service
-@Slf4j
 public class AudioCaptureService {
+
+    private static final Logger log = LoggerFactory.getLogger(AudioCaptureService.class);
 
     @Autowired
     private AppConfig config;
