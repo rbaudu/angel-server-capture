@@ -5,8 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * DTO pour transférer les résultats d'analyse de comportement via l'API REST.
@@ -63,9 +64,13 @@ public class BehaviorResultDto {
      * @return Le DTO correspondant
      */
     public static BehaviorResultDto fromResult(BehaviorResult result) {
+        if (result == null) {
+            return null;
+        }
+        
         BehaviorResultDto dto = new BehaviorResultDto();
         dto.setId(result.getId());
-        dto.setTimestamp(result.getTimestamp().toString());
+        dto.setTimestamp(result.getTimestamp() != null ? result.getTimestamp().toString() : null);
         dto.setStartTime(result.getStartTime() != null ? result.getStartTime().toString() : null);
         dto.setBehaviorType(result.getBehaviorType().name());
         dto.setConfidence(result.getConfidence());
@@ -73,11 +78,14 @@ public class BehaviorResultDto {
         dto.setOngoing(result.isOngoing());
         
         // Convertir la map complexe en map de noms et scores
-        Map<String, Double> patternMap = result.getDetectedPatterns().entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        entry -> entry.getKey().getName(),
-                        Map.Entry::getValue
-                ));
+        Map<String, Double> patternMap = new HashMap<>();
+        if (result.getDetectedPatterns() != null) {
+            patternMap = result.getDetectedPatterns().entrySet().stream()
+                    .collect(Collectors.toMap(
+                            entry -> entry.getKey().getName(),
+                            Map.Entry::getValue
+                    ));
+        }
         dto.setDetectedPatterns(patternMap);
         
         return dto;
