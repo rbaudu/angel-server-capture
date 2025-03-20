@@ -148,7 +148,22 @@ public class VideoCaptureService {
             log.error("Erreur lors de l'arrêt de la capture vidéo", e);
         }
     }
-    
+
+ // Dans VideoCaptureService.java
+    public Mat getLastFrameMat() {
+        // Retourner la dernière frame capturée
+        // Si vous stockez déjà les VideoFrame quelque part, récupérez la dernière
+        // Sinon, capturez une nouvelle frame
+        try {
+            Frame frame = grabber.grab();
+            if (frame != null && frame.image != null) {
+                return converter.convert(frame);
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de la capture d'une frame pour le test", e);
+        }
+        return null;
+    }
     /**
      * Boucle principale de capture vidéo.
      */

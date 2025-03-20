@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bytedeco.opencv.opencv_core.Mat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +22,14 @@ import com.rbaudu.angel.analyzer.model.ActivityType;
 import com.rbaudu.angel.analyzer.model.AnalysisResultDto;
 import com.rbaudu.angel.event.SynchronizedMediaEvent;
 import com.rbaudu.angel.model.SynchronizedMedia;
-
+import com.rbaudu.angel.model.VideoFrame;
+import com.rbaudu.angel.service.CaptureServiceManager;
+import com.rbaudu.angel.service.VideoCaptureService;
+import com.rbaudu.angel.analyzer.service.video.PresenceDetector;
+import org.springframework.http.HttpStatus;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.context.event.EventListener;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +47,15 @@ public class AnalysisController {
     
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired
+    private CaptureServiceManager captureServiceManager;
+    
+    @Autowired
+    private VideoCaptureService videoCaptureService;
+
+    @Autowired
+    private PresenceDetector presenceDetector;
     
     // Stockage des derniers résultats d'analyse pour l'API
     private final Map<String, AnalysisResultDto> latestResults = new ConcurrentHashMap<>();
@@ -142,6 +159,60 @@ public class AnalysisController {
         }
         
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/test-detection")
+    public ResponseEntity<Map<String, Object>> testDetection() {
+        try {
+            // Vérifier que le service de capture vidéo est démarré
+            if (!videoCaptureService.isCameraAvailable()) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "La caméra n'est pas disponible"));
+            }
+            
+            // Si le service n'est pas démarré, le démarrer
+            if (!captureServiceManager.isRunning()) {
+                captureServiceManager.startServices();
+                // Attendre un peu pour qu'au moins une frame soit capturée
+                Thread.sleep(500);
+            }
+            
+            // Mesurer le temps d'exécution
+            long startTime = System.currentTimeMillis();
+            
+            // Récupérer la dernière frame du service - nous devons trouver un moyen d'accéder à la dernière frame
+            // Cela dépend de l'implémentation exacte de votre service de capture
+            Mat frameMat = null;
+            
+             // Option 2: Ajouter une méthode getLastFrameMat() au VideoCaptureService
+            frameMat = videoCaptureService.getLastFrameMat();
+            
+            // Si nous ne pouvons pas accéder directement, capture une nouvelle frame via la caméra
+            if (frameMat == null) {
+                // Ici, on pourrait implémenter une capture directe
+                // Pour les besoins du test, créons un message d'erreur
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                    .body(Map.of("error", "Méthode de récupération de frame non disponible, une implémentation directe est nécessaire"));
+            }
+            
+            // Détecter la présence d'une personne
+            boolean personDetected = presenceDetector.isPersonPresent(frameMat);
+            
+            // Calculer le temps d'exécution
+            long detectionTime = System.currentTimeMillis() - startTime;
+            
+            // Construire la réponse
+            Map<String, Object> result = new HashMap<>();
+            result.put("personDetected", personDetected);
+            result.put("detectionTimeMs", detectionTime);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            error.put("stackTrace", Arrays.toString(e.getStackTrace()));
+            return ResponseEntity.status(500).body(error);
+        }
     }
     
     /**

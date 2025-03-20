@@ -9,9 +9,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.Shape;
+import org.tensorflow.ndarray.buffer.FloatDataBuffer;
+import org.tensorflow.types.TFloat32;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Service responsable de la détection de présence humaine dans les images vidéo.
@@ -25,13 +30,15 @@ public class PresenceDetector {
     private final AnalyzerConfig config;
     
     private SavedModelBundle model;
+    private List<String> personClasses = Arrays.asList("person");
     
     /**
      * Constructeur avec injection de dépendances.
-     * @param modelLoader Chargeur de modèle TensorFlow
-     * @param videoUtils Utilitaires vidéo
-     * @param config Configuration de l'analyseur
+														
+										   
+												 
      */
+    @Autowired
     public PresenceDetector(ModelLoader modelLoader, VideoUtils videoUtils, AnalyzerConfig config) {
         this.modelLoader = modelLoader;
         this.videoUtils = videoUtils;
@@ -44,8 +51,10 @@ public class PresenceDetector {
     @PostConstruct
     public void init() {
         try {
-            if (config.getHumanDetectionModel() != null) {
-                this.model = modelLoader.loadModel(config.getHumanDetectionModel());
+            String modelPath = config.getHumanDetectionModel();
+            if (modelPath != null && !modelPath.isEmpty()) {
+                logger.info("Chargement du modèle de détection de présence humaine: {}", modelPath);
+                this.model = modelLoader.loadModel(modelPath);
                 logger.info("Modèle de détection de présence humaine chargé avec succès");
             } else {
                 logger.warn("Aucun modèle de détection de présence humaine configuré");
@@ -67,31 +76,42 @@ public class PresenceDetector {
         }
         
         try {
-            // Prétraitement de l'image
-            Tensor<?> imageTensor = videoUtils.prepareImageForModel(
-                    frame, 
-                    config.getInputImageWidth(),
-                    config.getInputImageHeight());
+            // Redimensionner et prétraiter l'image
+            Mat processedFrame = videoUtils.resizeFrame(frame, 320, 320);
+            Tensor imageTensor = videoUtils.prepareImageForModel(processedFrame, 320, 320);
+						   
+												
+												  
             
-            // Exécution de la détection avec TensorFlow
-            Tensor<?> resultTensor = model.session().runner()
-                    .feed("input", imageTensor)
-                    .fetch("detection_scores")
-                    .run().get(0);
+            // Exécuter l'inférence
+            List<Tensor> outputs = model.session().runner()
+                    .feed("serving_default_input_tensor", imageTensor)
+                    .fetch("StatefulPartitionedCall")
+                    .run();
             
-            // Récupération des scores
-            float[][] scores = new float[1][100]; // Supposons un maximum de 100 détections
-            resultTensor.copyTo(scores);
+            // Traiter les résultats (format dépendant du modèle exact)
+            // Pour SSD MobileNet, les résultats contiennent généralement:
+            // - Boîtes englobantes
+            // - Scores de confiance
+            // - Classes (indices)
             
-            // Détection des personnes (classe 1 dans les modèles COCO)
-            for (float score : scores[0]) {
-                if (score > config.getPresenceThreshold()) {
-                    logger.debug("Personne détectée avec un score de confiance de {}", score);
+            Tensor resultTensor = outputs.get(0);
+            float[][][] result = new float[1][100][7]; // [batch, num_detections, [y1, x1, y2, x2, score, class, ?]]
+            resultTensor.copyTo(result);
+            
+            // Chercher les détections de personnes
+            for (int i = 0; i < 100; i++) {
+                float score = result[0][i][4];
+                int classId = (int) result[0][i][5];
+                
+                // Classe 1 pour "personne" dans COCO
+                if (classId == 1 && score > config.getPresenceThreshold()) {
+                    logger.debug("Personne détectée avec un score de {}", score);
                     return true;
                 }
             }
             
-            logger.debug("Aucune personne détectée dans l'image");
+            logger.debug("Aucune personne détectée");
             return false;
             
         } catch (Exception e) {
@@ -101,16 +121,27 @@ public class PresenceDetector {
     }
     
     /**
-     * Alternative à l'utilisation de TensorFlow: détection basée sur HOG + SVM via OpenCV
-     * @param frame Image à analyser
-     * @return true si une personne est détectée, false sinon
+     * Alternative basée sur OpenCV pour la détection de personnes.
+     * Utilisé comme solution de secours si TensorFlow ne fonctionne pas.
+															   
      */
     public boolean detectPersonWithHOG(Mat frame) {
-        // Cette méthode pourrait être implémentée comme solution de secours
-        // en utilisant les détecteurs intégrés d'OpenCV si TensorFlow n'est pas disponible
-        
-        // À implémenter si nécessaire
-        
-        return false;
+        try {
+            org.bytedeco.opencv.opencv_objdetect.HOGDescriptor hog = new org.bytedeco.opencv.opencv_objdetect.HOGDescriptor();
+            hog.setSVMDetector(org.bytedeco.opencv.opencv_objdetect.HOGDescriptor.getDefaultPeopleDetector());
+            
+            org.bytedeco.opencv.opencv_core.RectVector foundLocations = new org.bytedeco.opencv.opencv_core.RectVector();
+            org.bytedeco.opencv.opencv_core.DoubleVector weights = new org.bytedeco.opencv.opencv_core.DoubleVector();
+            
+            // Redimensionner pour de meilleures performances
+            Mat resizedFrame = videoUtils.resizeFrame(frame, 640, 480);
+            
+            hog.detectMultiScale(resizedFrame, foundLocations, weights);
+            
+            return foundLocations.size() > 0;
+        } catch (Exception e) {
+            logger.error("Erreur lors de la détection de personne avec HOG", e);
+            return false;
+        }
     }
 }
