@@ -1,6 +1,5 @@
 package com.rbaudu.angel.analyzer.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConfigurationProperties(prefix = "angel.analyzer")
-@Data
 public class AnalyzerConfig {
     /**
      * Chemin vers le modèle de détection de présence humaine
@@ -67,4 +65,158 @@ public class AnalyzerConfig {
      * Activer/désactiver l'analyse audio
      */
     private boolean audioAnalysisEnabled = true;
+
+    /**
+     * Getter pour humanDetectionModel
+     */
+    public String getHumanDetectionModel() {
+        return humanDetectionModel;
+    }
+
+    /**
+     * Setter pour humanDetectionModel
+     */
+    public void setHumanDetectionModel(String humanDetectionModel) {
+        this.humanDetectionModel = humanDetectionModel;
+    }
+
+    /**
+     * Getter pour activityRecognitionModel
+     */
+    public String getActivityRecognitionModel() {
+        return activityRecognitionModel;
+    }
+
+    /**
+     * Setter pour activityRecognitionModel
+     */
+    public void setActivityRecognitionModel(String activityRecognitionModel) {
+        this.activityRecognitionModel = activityRecognitionModel;
+    }
+
+    /**
+     * Getter pour audioClassificationModel
+     */
+    public String getAudioClassificationModel() {
+        return audioClassificationModel;
+    }
+
+    /**
+     * Setter pour audioClassificationModel
+     */
+    public void setAudioClassificationModel(String audioClassificationModel) {
+        this.audioClassificationModel = audioClassificationModel;
+    }
+
+    /**
+     * Getter pour captureIntervalMs
+     */
+    public int getCaptureIntervalMs() {
+        return captureIntervalMs;
+    }
+
+    /**
+     * Setter pour captureIntervalMs
+     */
+    public void setCaptureIntervalMs(int captureIntervalMs) {
+        this.captureIntervalMs = captureIntervalMs;
+    }
+
+    /**
+     * Getter pour presenceThreshold
+     */
+    public double getPresenceThreshold() {
+        return presenceThreshold;
+    }
+
+    /**
+     * Setter pour presenceThreshold
+     */
+    public void setPresenceThreshold(double presenceThreshold) {
+        this.presenceThreshold = presenceThreshold;
+    }
+
+    /**
+     * Getter pour activityConfidenceThreshold
+     */
+    public double getActivityConfidenceThreshold() {
+        return activityConfidenceThreshold;
+    }
+
+    /**
+     * Setter pour activityConfidenceThreshold
+     */
+    public void setActivityConfidenceThreshold(double activityConfidenceThreshold) {
+        this.activityConfidenceThreshold = activityConfidenceThreshold;
+    }
+
+    /**
+     * Getter pour historySize
+     */
+    public int getHistorySize() {
+        return historySize;
+    }
+
+    /**
+     * Setter pour historySize
+     */
+    public void setHistorySize(int historySize) {
+        this.historySize = historySize;
+    }
+
+    /**
+     * Getter pour inputImageWidth
+     */
+    public int getInputImageWidth() {
+        return inputImageWidth;
+    }
+
+    /**
+     * Setter pour inputImageWidth
+     */
+    public void setInputImageWidth(int inputImageWidth) {
+        this.inputImageWidth = inputImageWidth;
+    }
+
+    /**
+     * Getter pour inputImageHeight
+     */
+    public int getInputImageHeight() {
+        return inputImageHeight;
+    }
+
+    /**
+     * Setter pour inputImageHeight
+     */
+    public void setInputImageHeight(int inputImageHeight) {
+        this.inputImageHeight = inputImageHeight;
+    }
+
+    /**
+     * Getter pour audioSampleRate
+     */
+    public int getAudioSampleRate() {
+        return audioSampleRate;
+    }
+
+    /**
+     * Setter pour audioSampleRate
+     */
+    public void setAudioSampleRate(int audioSampleRate) {
+        this.audioSampleRate = audioSampleRate;
+    }
+
+    /**
+     * Getter pour audioAnalysisEnabled
+     */
+    public boolean isAudioAnalysisEnabled() {
+        return audioAnalysisEnabled;
+    }
+
+    /**
+     * Setter pour audioAnalysisEnabled
+     */
+    public void setAudioAnalysisEnabled(boolean audioAnalysisEnabled) {
+        this.audioAnalysisEnabled = audioAnalysisEnabled;
+    }
 }
