@@ -12,7 +12,7 @@
     <groupId>com.rbaudu</groupId>
     <artifactId>angel-server-capture</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <name>angel-server-capture</name>
+    <n>angel-server-capture</n>
     <description>Serveur de capture, synchronisation et analyse de flux vidéo et audio</description>
     
     <properties>
@@ -67,18 +67,6 @@
             <version>${ffmpeg.version}</version>
         </dependency>
         
-        <!-- Lombok to reduce boilerplate code -->
-        <!--<dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>-->
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>1.18.26</version>
-			<scope>provided</scope>
-		</dependency>
 		 <!-- Pour javax.annotation.PostConstruct -->
 		<dependency>
 			<groupId>javax.annotation</groupId>
@@ -139,13 +127,6 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-							<version>1.18.26</version>
-						</path>
-					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
         </plugins>

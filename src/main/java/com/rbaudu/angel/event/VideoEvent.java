@@ -4,12 +4,9 @@ import org.springframework.context.ApplicationEvent;
 
 import com.rbaudu.angel.model.VideoFrame;
 
-import lombok.Getter;
-
 /**
  * Événement déclenché lorsqu'une nouvelle trame vidéo est capturée.
  */
-@Getter
 public class VideoEvent extends ApplicationEvent {
     
     private static final long serialVersionUID = 1L;
@@ -28,5 +25,14 @@ public class VideoEvent extends ApplicationEvent {
     public VideoEvent(Object source, VideoFrame videoFrame) {
         super(source);
         this.videoFrame = videoFrame;
+    }
+    
+    /**
+     * Récupère la trame vidéo associée à cet événement.
+     * 
+     * @return la trame vidéo
+     */
+    public VideoFrame getVideoFrame() {
+        return videoFrame;
     }
 }

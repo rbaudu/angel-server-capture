@@ -4,12 +4,9 @@ import org.springframework.context.ApplicationEvent;
 
 import com.rbaudu.angel.model.SynchronizedMedia;
 
-import lombok.Getter;
-
 /**
  * Événement déclenché lorsqu'un média synchronisé est créé.
  */
-@Getter
 public class SynchronizedMediaEvent extends ApplicationEvent {
     
     private static final long serialVersionUID = 1L;
@@ -28,5 +25,14 @@ public class SynchronizedMediaEvent extends ApplicationEvent {
     public SynchronizedMediaEvent(Object source, SynchronizedMedia synchronizedMedia) {
         super(source);
         this.synchronizedMedia = synchronizedMedia;
+    }
+    
+    /**
+     * Récupère le média synchronisé associé à cet événement.
+     * 
+     * @return le média synchronisé
+     */
+    public SynchronizedMedia getSynchronizedMedia() {
+        return synchronizedMedia;
     }
 }
