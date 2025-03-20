@@ -8,6 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -21,15 +23,15 @@ import com.rbaudu.angel.model.VideoFrame;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service responsable de la synchronisation des flux audio et vidéo.
  * Ce service écoute les événements de capture et synchronise les flux.
  */
 @Service
-@Slf4j
 public class MediaSynchronizationService {
+
+    private static final Logger log = LoggerFactory.getLogger(MediaSynchronizationService.class);
 
     @Autowired
     private AppConfig config;
