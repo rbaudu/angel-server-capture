@@ -1,0 +1,234 @@
+[
+  {
+    "id": "morning-routine",
+    "type": "MORNING_ROUTINE",
+    "name": "Routine matinale",
+    "description": "Activités habituelles du matin après le réveil",
+    "activitySequence": [
+      "SLEEPING",
+      "PRESENT_INACTIVE",
+      "CLEANING",
+      "EATING"
+    ],
+    "minDurationSec": 1800,
+    "maxDurationSec": 7200,
+    "strictOrderRequired": true,
+    "baselineScore": 0.8,
+    "transitions": [
+      {
+        "fromActivity": "SLEEPING",
+        "toActivity": "PRESENT_INACTIVE",
+        "probability": 0.9,
+        "typicalDurationSec": 300
+      },
+      {
+        "fromActivity": "PRESENT_INACTIVE",
+        "toActivity": "CLEANING",
+        "probability": 0.8,
+        "typicalDurationSec": 180
+      },
+      {
+        "fromActivity": "CLEANING",
+        "toActivity": "EATING",
+        "probability": 0.7,
+        "typicalDurationSec": 120
+      }
+    ],
+    "typicalHours": [6, 7, 8, 9]
+  },
+  {
+    "id": "evening-routine",
+    "type": "EVENING_ROUTINE",
+    "name": "Routine du soir",
+    "description": "Activités habituelles avant le coucher",
+    "activitySequence": [
+      "WATCHING_TV",
+      "READING",
+      "CLEANING",
+      "PRESENT_INACTIVE",
+      "SLEEPING"
+    ],
+    "minDurationSec": 2400,
+    "maxDurationSec": 7200,
+    "strictOrderRequired": false,
+    "baselineScore": 0.75,
+    "transitions": [
+      {
+        "fromActivity": "WATCHING_TV",
+        "toActivity": "READING",
+        "probability": 0.6,
+        "typicalDurationSec": 240
+      },
+      {
+        "fromActivity": "READING",
+        "toActivity": "CLEANING",
+        "probability": 0.5,
+        "typicalDurationSec": 300
+      },
+      {
+        "fromActivity": "CLEANING",
+        "toActivity": "PRESENT_INACTIVE",
+        "probability": 0.7,
+        "typicalDurationSec": 180
+      },
+      {
+        "fromActivity": "PRESENT_INACTIVE",
+        "toActivity": "SLEEPING",
+        "probability": 0.9,
+        "typicalDurationSec": 120
+      }
+    ],
+    "typicalHours": [20, 21, 22, 23]
+  },
+  {
+    "id": "mealtime-pattern",
+    "type": "EATING_PATTERN",
+    "name": "Repas",
+    "description": "Comportement typique pendant les repas",
+    "activitySequence": [
+      "PRESENT_INACTIVE",
+      "EATING",
+      "TALKING",
+      "EATING",
+      "PRESENT_INACTIVE"
+    ],
+    "minDurationSec": 900,
+    "maxDurationSec": 3600,
+    "strictOrderRequired": false,
+    "baselineScore": 0.85,
+    "transitions": [
+      {
+        "fromActivity": "PRESENT_INACTIVE",
+        "toActivity": "EATING",
+        "probability": 0.9,
+        "typicalDurationSec": 60
+      },
+      {
+        "fromActivity": "EATING",
+        "toActivity": "TALKING",
+        "probability": 0.6,
+        "typicalDurationSec": 30
+      },
+      {
+        "fromActivity": "TALKING",
+        "toActivity": "EATING",
+        "probability": 0.8,
+        "typicalDurationSec": 30
+      },
+      {
+        "fromActivity": "EATING",
+        "toActivity": "PRESENT_INACTIVE",
+        "probability": 0.7,
+        "typicalDurationSec": 60
+      }
+    ],
+    "typicalHours": [7, 8, 12, 13, 19, 20]
+  },
+  {
+    "id": "leisure-pattern",
+    "type": "LEISURE_PATTERN",
+    "name": "Loisirs",
+    "description": "Activités de détente et loisirs",
+    "activitySequence": [
+      "WATCHING_TV",
+      "READING",
+      "KNITTING",
+      "PLAYING"
+    ],
+    "minDurationSec": 1800,
+    "maxDurationSec": 14400,
+    "strictOrderRequired": false,
+    "baselineScore": 0.7,
+    "transitions": [],
+    "typicalHours": [14, 15, 16, 17, 18, 19, 20]
+  },
+  {
+    "id": "housekeeping-pattern",
+    "type": "HOUSEKEEPING_PATTERN",
+    "name": "Tâches ménagères",
+    "description": "Activités liées au nettoyage et à l'entretien",
+    "activitySequence": [
+      "CLEANING",
+      "PRESENT_INACTIVE",
+      "CLEANING"
+    ],
+    "minDurationSec": 600,
+    "maxDurationSec": 5400,
+    "strictOrderRequired": false,
+    "baselineScore": 0.75,
+    "transitions": [],
+    "typicalHours": [9, 10, 11, 14, 15, 16]
+  },
+  {
+    "id": "social-pattern",
+    "type": "SOCIAL_PATTERN",
+    "name": "Interactions sociales",
+    "description": "Activités d'interaction sociale",
+    "activitySequence": [
+      "TALKING",
+      "CALLING",
+      "WATCHING_TV",
+      "TALKING"
+    ],
+    "minDurationSec": 600,
+    "maxDurationSec": 7200,
+    "strictOrderRequired": false,
+    "baselineScore": 0.65,
+    "transitions": [],
+    "typicalHours": [10, 11, 14, 15, 16, 17, 18, 19, 20]
+  },
+  {
+    "id": "resting-pattern",
+    "type": "RESTING_PATTERN",
+    "name": "Repos",
+    "description": "Périodes de repos et relaxation",
+    "activitySequence": [
+      "PRESENT_INACTIVE",
+      "SLEEPING",
+      "PRESENT_INACTIVE"
+    ],
+    "minDurationSec": 1800,
+    "maxDurationSec": 28800,
+    "strictOrderRequired": false,
+    "baselineScore": 0.8,
+    "transitions": [],
+    "typicalHours": [13, 14, 22, 23, 0, 1, 2, 3, 4, 5, 6]
+  },
+  {
+    "id": "agitated-pattern",
+    "type": "AGITATED",
+    "name": "Comportement agité",
+    "description": "Transitions rapides entre activités, mouvements fréquents",
+    "activitySequence": [
+      "PRESENT_INACTIVE",
+      "CLEANING",
+      "PRESENT_INACTIVE",
+      "WATCHING_TV",
+      "PRESENT_INACTIVE",
+      "CLEANING"
+    ],
+    "minDurationSec": 300,
+    "maxDurationSec": 1800,
+    "strictOrderRequired": false,
+    "baselineScore": 0.6,
+    "transitions": [],
+    "typicalHours": []
+  },
+  {
+    "id": "calm-pattern",
+    "type": "CALM",
+    "name": "Comportement calme",
+    "description": "Longues périodes d'activités calmes",
+    "activitySequence": [
+      "READING",
+      "KNITTING",
+      "WATCHING_TV"
+    ],
+    "minDurationSec": 1800,
+    "maxDurationSec": 10800,
+    "strictOrderRequired": false,
+    "baselineScore": 0.7,
+    "transitions": [],
+    "typicalHours": []
+  }
+]
