@@ -1,5 +1,7 @@
 package com.rbaudu.angel.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -12,15 +14,13 @@ import com.rbaudu.angel.model.AudioChunk;
 import com.rbaudu.angel.model.SynchronizedMedia;
 import com.rbaudu.angel.model.VideoFrame;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Service responsable de la publication d'événements médias.
  * Permet la communication entre les différents composants de l'application.
  */
 @Service
-@Slf4j
 public class MediaEventPublisher {
+    private static final Logger log = LoggerFactory.getLogger(MediaEventPublisher.class);
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
