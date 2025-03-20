@@ -13,6 +13,8 @@ import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +23,6 @@ import com.rbaudu.angel.model.VideoFrame;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.imageio.ImageIO;
 
@@ -30,8 +31,8 @@ import javax.imageio.ImageIO;
  * Utilise JavaCV et OpenCV pour capturer les flux de la caméra.
  */
 @Service
-@Slf4j
 public class VideoCaptureService {
+    private static final Logger log = LoggerFactory.getLogger(VideoCaptureService.class);
 
     @Autowired
     private AppConfig config;
