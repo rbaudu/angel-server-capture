@@ -14,7 +14,6 @@ import org.tensorflow.Tensor;
 import jakarta.annotation.PostConstruct;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,17 +106,12 @@ public class AudioPatternDetector {
             List<Tensor> outputs = runner.run();
             Tensor resultTensor = outputs.get(0);
             
-            // Extraire les résultats du tensor
+            // Extraire les résultats du tensor en utilisant un tableau
             int numClasses = 5; // Supposons 5 types de sons identifiables
-            FloatBuffer resultBuffer = FloatBuffer.allocate(numClasses);
-            
-            // Mise à jour pour compatibilité API
-            resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
-            resultBuffer.rewind();
-            
-            // Convertir les résultats en tableau
             float[] audioClasses = new float[numClasses];
-            resultBuffer.get(audioClasses);
+            
+            // Utiliser directement copyTo pour éviter les problèmes d'API
+            resultTensor.copyTo(audioClasses);
             
             // Conversion en Map d'activités
             Map<ActivityType, Double> result = new HashMap<>();
