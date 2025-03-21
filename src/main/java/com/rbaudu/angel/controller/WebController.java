@@ -1,6 +1,8 @@
 package com.rbaudu.angel.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,14 +11,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import com.rbaudu.angel.config.AppConfig;
 import com.rbaudu.angel.service.CaptureServiceManager;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Contrôleur pour gérer les vues de l'interface utilisateur.
  */
 @Controller
-@Slf4j
 public class WebController {
+
+    private static final Logger log = LoggerFactory.getLogger(WebController.class);
 
     @Autowired
     private AppConfig config;

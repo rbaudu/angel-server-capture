@@ -6,6 +6,8 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -21,15 +23,14 @@ import com.rbaudu.angel.model.SynchronizedMedia;
 import com.rbaudu.angel.model.VideoFrame;
 import com.rbaudu.angel.service.MediaEventPublisher;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Service responsable d'analyser les médias synchronisés pour détecter
  * la présence humaine et les activités.
  */
 @Service
-@Slf4j
 public class AnalysisService {
+
+    private static final Logger log = LoggerFactory.getLogger(AnalysisService.class);
 
     @Autowired
     private AnalysisOrchestrator analysisOrchestrator;
@@ -95,7 +96,7 @@ public class AnalysisService {
         // Si le média n'a pas de vidéo, on ne peut pas faire d'analyse
         if (!media.isHasVideo() || videoFrame == null) {
             log.debug("Pas d'analyse possible : le média ne contient pas de vidéo");
-            return AnalysisResult.unknownActivity();
+            return AnalysisResult.unknownActivity(0.0);
         }
         
         // Extraire la frame vidéo de l'objet VideoFrame
@@ -104,7 +105,7 @@ public class AnalysisService {
         // Si la matrice d'image n'est pas disponible, on ne peut pas faire d'analyse
         if (frame == null) {
             log.debug("Pas d'analyse possible : la matrice d'image n'est pas disponible");
-            return AnalysisResult.unknownActivity();
+            return AnalysisResult.unknownActivity(0.0);
         }
         
         // Préparer l'audio si disponible
@@ -126,18 +127,19 @@ public class AnalysisService {
      */
     private AudioInputStream convertToAudioStream(AudioChunk audioChunk) {
         try {
-            byte[] audioData = audioChunk.getAudioData();
+            // Utiliser Base64.getDecoder().decode() pour convertir la chaîne Base64 en bytes
+            byte[] audioData = java.util.Base64.getDecoder().decode(audioChunk.getAudioData());
             if (audioData == null || audioData.length == 0) {
                 return null;
             }
             
-            // Créer un format audio basé sur les propriétés de l'AudioChunk
+            // Créer un format audio basé sur les propriétés fixes car AudioChunk n'a pas ces méthodes
             AudioFormat format = new AudioFormat(
                     audioChunk.getSampleRate(),
-                    audioChunk.getSampleSizeInBits(),
+                    16, // bits par échantillon - valeur fixe pour PCM 16 bits
                     audioChunk.getChannels(),
-                    audioChunk.isSigned(),
-                    audioChunk.isBigEndian()
+                    true, // signé
+                    false // little endian (PCM standard)
             );
             
             // Créer un AudioInputStream à partir des données brutes

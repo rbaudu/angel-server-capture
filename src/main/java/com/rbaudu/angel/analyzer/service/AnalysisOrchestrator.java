@@ -85,7 +85,7 @@ public class AnalysisOrchestrator {
             
         } catch (Exception e) {
             logger.error("Erreur pendant l'analyse de la frame", e);
-            return AnalysisResult.unknownActivity();
+            return AnalysisResult.unknownActivity(0.0);
         }
     }
     
