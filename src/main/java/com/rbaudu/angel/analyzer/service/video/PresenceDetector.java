@@ -4,8 +4,9 @@ import com.rbaudu.angel.analyzer.config.AnalyzerConfig;
 import com.rbaudu.angel.analyzer.util.ModelLoader;
 import com.rbaudu.angel.analyzer.util.VideoUtils;
 import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.MatVector;
+import org.bytedeco.opencv.opencv_core.RectVector;
 import org.bytedeco.opencv.opencv_objdetect.HOGDescriptor;
+import org.bytedeco.javacpp.DoublePointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -83,7 +84,8 @@ public class PresenceDetector {
                     .feed("serving_default_input_tensor", imageTensor)
                     .fetch("StatefulPartitionedCall");
             
-            Tensor resultTensor = runner.run().get(0);
+            List<Tensor> outputs = runner.run();
+            Tensor resultTensor = outputs.get(0);
             
             // Créer un buffer pour recevoir les résultats
             // Format typique: [batch, num_detections, [y1, x1, y2, x2, score, class, ?]]
@@ -91,7 +93,7 @@ public class PresenceDetector {
             
             // Copier les résultats du tensor dans le buffer
             FloatBuffer resultBuffer = FloatBuffer.allocate(1 * 100 * 7);
-            resultTensor.asRawTensor().data().read(resultBuffer);
+            resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
             resultBuffer.rewind();
             
             // Extraire les résultats du buffer
@@ -130,18 +132,17 @@ public class PresenceDetector {
         try {
             HOGDescriptor hog = new HOGDescriptor();
             
-            // Utiliser une matrice pour les descripteurs HOG au lieu de FloatPointer
-            Mat hogDescriptors = new Mat();
-            HOGDescriptor.getDefaultPeopleDetector().copyTo(hogDescriptors);
-            hog.setSVMDetector(hogDescriptors);
+            // Utiliser le détecteur par défaut pour les personnes
+            hog.setSVMDetector(HOGDescriptor.getDefaultPeopleDetector());
             
-            // Remplacer DoubleVector par un format compatible
-            MatVector foundLocations = new MatVector();
-            Mat weights = new Mat();
+            // Conteneurs pour les résultats
+            RectVector foundLocations = new RectVector();
+            DoublePointer weights = new DoublePointer();
             
             // Redimensionner pour de meilleures performances
             Mat resizedFrame = videoUtils.resizeFrame(frame, 640, 480);
             
+            // Détecter les personnes
             hog.detectMultiScale(resizedFrame, foundLocations, weights);
             
             return foundLocations.size() > 0;
