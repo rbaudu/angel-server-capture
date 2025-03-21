@@ -3,6 +3,8 @@ package com.rbaudu.angel.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,15 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.rbaudu.angel.config.AppConfig;
 import com.rbaudu.angel.service.CaptureServiceManager;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Contrôleur REST pour gérer les opérations de capture.
  */
 @RestController
 @RequestMapping("/api/capture")
-@Slf4j
 public class CaptureController {
+
+    private static final Logger log = LoggerFactory.getLogger(CaptureController.class);
 
     @Autowired
     private CaptureServiceManager captureServiceManager;

@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,15 +34,14 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.context.event.EventListener;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * Contrôleur REST pour l'accès aux fonctionnalités d'analyse d'activités.
  */
 @RestController
 @RequestMapping("/api/analysis")
-@Slf4j
 public class AnalysisController {
+    
+    private static final Logger log = LoggerFactory.getLogger(AnalysisController.class);
     
     @Autowired
     private AnalyzerConfig config;
