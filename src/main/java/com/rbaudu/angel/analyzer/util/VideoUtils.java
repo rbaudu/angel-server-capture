@@ -6,7 +6,7 @@ import org.bytedeco.opencv.global.opencv_imgproc;
 import org.springframework.stereotype.Component;
 import org.tensorflow.Tensor;
 import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.FloatPointer;
+import org.tensorflow.DataType;
 
 import java.nio.FloatBuffer;
 import java.nio.ByteBuffer;
@@ -64,30 +64,27 @@ public class VideoUtils {
     public Tensor matToTensor(Mat frame, int height, int width) {
         // Suppose que l'image est déjà en RGB et normalisée entre 0-1
         
-        // Créer un tampon pour les pixels de l'image
+        // Créer un tableau pour les pixels de l'image
         // Format: [1, height, width, 3]
-        FloatBuffer floatBuffer = FloatBuffer.allocate(1 * height * width * 3);
+        float[] pixelData = new float[1 * height * width * 3];
         
-        // Méthode alternative pour extraire les valeurs de pixels
+        // Conversion des données OpenCV en tableau de floats
         BytePointer bytePtr = frame.ptr();
-        float[] pixelData = new float[3];
         
+        int idx = 0;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int pos = y * width * 3 + x * 3;
                 for (int c = 0; c < 3; c++) {
                     // Convertir les valeurs de byte à float (normalisées)
-                    float pixelValue = (bytePtr.get(pos + c) & 0xFF) / 255.0f;
-                    floatBuffer.put(pixelValue);
+                    pixelData[idx++] = (bytePtr.get(pos + c) & 0xFF) / 255.0f;
                 }
             }
         }
         
-        floatBuffer.rewind();
-        
-        // Création du tensor en utilisant l'API compatible
+        // Création du tensor en utilisant l'API compatible avec TF 0.4.0
         long[] shape = {1, height, width, 3};
-        return Tensor.create(shape, floatBuffer);
+        return Tensor.create(shape, DataType.FLOAT, FloatBuffer.wrap(pixelData));
     }
     
     /**
