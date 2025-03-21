@@ -2,7 +2,6 @@ package com.rbaudu.angel.analyzer.util;
 
 import org.springframework.stereotype.Component;
 import org.tensorflow.Tensor;
-import org.tensorflow.DataType;
 
 // Imports pour TarsosDSP via JitPack
 import be.tarsos.dsp.AudioDispatcher;
@@ -210,7 +209,8 @@ public class AudioUtils {
     public Tensor audioToTensor(float[] audioData) {
         // Format: [batch_size, audio_length]
         long[] shape = {1, audioData.length};
-        return Tensor.create(shape, DataType.FLOAT, FloatBuffer.wrap(audioData));
+        FloatBuffer floatBuffer = FloatBuffer.wrap(audioData);
+        return Tensor.create(shape, floatBuffer);
     }
     
     /**
