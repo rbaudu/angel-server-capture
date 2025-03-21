@@ -2,7 +2,9 @@ package com.rbaudu.angel.analyzer.util;
 
 import org.springframework.stereotype.Component;
 import org.tensorflow.Tensor;
-import org.tensorflow.types.TFloat32;
+import org.tensorflow.ndarray.FloatNdArray;
+import org.tensorflow.ndarray.NdArrays;
+import org.tensorflow.ndarray.Shape;
 
 // Imports pour TarsosDSP via JitPack
 import be.tarsos.dsp.AudioDispatcher;
@@ -217,7 +219,11 @@ public class AudioUtils {
         
         floatBuffer.rewind();
         
-        return Tensor.create(org.tensorflow.Shape.of(1, audioData.length), floatBuffer);
+        // Création du tensor en utilisant les API TensorFlow plus récentes
+        Shape shape = Shape.of(1, audioData.length);
+        FloatNdArray ndArray = NdArrays.createFloatNdArray(shape);
+        ndArray.read(floatBuffer);
+        return Tensor.of(shape, ndArray.asRawTensor().data());
     }
     
     /**
