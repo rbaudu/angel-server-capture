@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -55,7 +55,7 @@ public class MultimodalFusion {
         
         // Création du résultat final
         AnalysisResult result = AnalysisResult.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())  // Utilise Instant au lieu de LocalDateTime
                 .activityType(bestActivity)
                 .confidence(maxScore)
                 .personPresent(bestActivity != ActivityType.ABSENT)
