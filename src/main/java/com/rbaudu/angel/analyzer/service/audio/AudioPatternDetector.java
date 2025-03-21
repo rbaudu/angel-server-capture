@@ -7,9 +7,12 @@ import com.rbaudu.angel.analyzer.util.ModelLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.tensorflow.Result;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.buffer.DataBuffers;
+import org.tensorflow.types.TFloat32;
 
 import jakarta.annotation.PostConstruct;
 import javax.sound.sampled.AudioFormat;
@@ -97,23 +100,23 @@ public class AudioPatternDetector {
             float[] mfcc = audioUtils.extractMFCC(audioData, targetFormat.getSampleRate(), 13);
             
             // Conversion en Tensor
-            Tensor featureTensor = audioUtils.audioToTensor(mfcc);
+            TFloat32 featureTensor = audioUtils.audioToTensor(mfcc);
             
             // Exécution de l'inférence
             Session.Runner runner = model.session().runner()
                     .feed("input", featureTensor)
                     .fetch("output");
             
-            List<Tensor> outputs = runner.run();
-            Tensor resultTensor = outputs.get(0);
+            Result outputs = runner.run();
+            TFloat32 resultTensor = (TFloat32) outputs.get(0);
             
             // Extraire les résultats du tensor en utilisant un tampon
             int numClasses = 5; // Supposons 5 types de sons identifiables
             float[] audioClasses = new float[numClasses];
-            
+           
             // Pour TensorFlow 0.4.0, extraire d'abord les données dans un FloatBuffer
             FloatBuffer resultBuffer = FloatBuffer.allocate(numClasses);
-            resultBuffer = resultTensor.copyTo(resultBuffer);
+            resultTensor.copyTo(DataBuffers.of(resultBuffer));
             resultBuffer.position(0);  // Rewind the buffer
             resultBuffer.get(audioClasses);
             

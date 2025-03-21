@@ -3,16 +3,21 @@ package com.rbaudu.angel.analyzer.service.video;
 import com.rbaudu.angel.analyzer.config.AnalyzerConfig;
 import com.rbaudu.angel.analyzer.util.ModelLoader;
 import com.rbaudu.angel.analyzer.util.VideoUtils;
+import static org.bytedeco.opencv.global.opencv_core.*; // Import des constantes OpenCV
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.RectVector;
 import org.bytedeco.opencv.opencv_objdetect.HOGDescriptor;
 import org.bytedeco.javacpp.DoublePointer;
+import org.bytedeco.javacpp.FloatPointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.tensorflow.Result;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.buffer.DataBuffers;
+import org.tensorflow.types.TFloat32;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.annotation.PostConstruct;
@@ -84,8 +89,8 @@ public class PresenceDetector {
                     .feed("serving_default_input_tensor", imageTensor)
                     .fetch("StatefulPartitionedCall");
             
-            List<Tensor> outputs = runner.run();
-            Tensor resultTensor = outputs.get(0);
+            Result outputs = runner.run();
+            TFloat32 resultTensor = (TFloat32) outputs.get(0);
             
             // Créer un buffer pour recevoir les résultats
             // Format typique: [batch, num_detections, [y1, x1, y2, x2, score, class, ?]]
@@ -95,8 +100,8 @@ public class PresenceDetector {
             float[] resultArray = new float[1 * 100 * 7];
             FloatBuffer resultBuffer = FloatBuffer.allocate(1 * 100 * 7);
             
-            // Pour TensorFlow 0.4.0, extraire d'abord les données dans un FloatBuffer
-            resultBuffer = resultTensor.copyTo(FloatBuffer.allocate(1 * 100 * 7));
+            resultTensor.copyTo(DataBuffers.of(resultBuffer));
+           //resultBuffer = resultTensor.copyTo(FloatBuffer.allocate(1 * 100 * 7));
             resultBuffer.position(0);  // Rewind the buffer
             resultBuffer.get(resultArray);
             
@@ -140,7 +145,13 @@ public class PresenceDetector {
             HOGDescriptor hog = new HOGDescriptor();
             
             // Dans OpenCV 4.x, on peut utiliser le détecteur de personnes par défaut directement
-            hog.setSVMDetector(HOGDescriptor.getDefaultPeopleDetector());
+            FloatPointer detector = HOGDescriptor.getDefaultPeopleDetector();
+            Mat detectorMat = new Mat(detector.limit(), 1, CV_32F); 
+            //detectorMat.data().getPointer().put(detector);
+            // Convertir BytePointer en FloatPointer et copier les données
+            FloatPointer detectorMatPointer = new FloatPointer(detectorMat.data());
+
+            hog.setSVMDetector(detectorMat);
             
             // Conteneurs pour les résultats
             RectVector foundLocations = new RectVector();

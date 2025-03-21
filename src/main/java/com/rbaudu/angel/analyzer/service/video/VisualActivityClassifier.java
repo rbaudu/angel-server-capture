@@ -8,9 +8,12 @@ import org.bytedeco.opencv.opencv_core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.tensorflow.Result;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.buffer.DataBuffers;
+import org.tensorflow.types.TFloat32;
 
 import jakarta.annotation.PostConstruct;
 import java.nio.FloatBuffer;
@@ -83,16 +86,15 @@ public class VisualActivityClassifier {
                     .feed("input", imageTensor)
                     .fetch("output");
             
-            List<Tensor> outputs = runner.run();
-            Tensor resultTensor = outputs.get(0);
+            Result outputs = runner.run();
+            TFloat32 resultTensor = (TFloat32)outputs.get(0);
             
             // Extraire les résultats du Tensor
             int numActivities = ActivityType.values().length - 1; // -1 pour exclure ABSENT
             float[] results = new float[numActivities];
             
-            // Pour TensorFlow 0.4.0, extraire d'abord les données dans un FloatBuffer
             FloatBuffer resultBuffer = FloatBuffer.allocate(numActivities);
-            resultBuffer = resultTensor.copyTo(resultBuffer);
+            resultTensor.copyTo(DataBuffers.of(resultBuffer));
             resultBuffer.position(0);  // Rewind the buffer
             resultBuffer.get(results);
             

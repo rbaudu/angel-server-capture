@@ -5,6 +5,9 @@ import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.global.opencv_imgproc;
 import org.springframework.stereotype.Component;
 import org.tensorflow.Tensor;
+import org.tensorflow.ndarray.Shape;
+import org.tensorflow.ndarray.buffer.DataBuffers;
+import org.tensorflow.types.TFloat32;
 import org.bytedeco.javacpp.BytePointer;
 
 import java.nio.FloatBuffer;
@@ -81,11 +84,12 @@ public class VideoUtils {
             }
         }
         
-        // Création du tensor en utilisant l'API compatible avec TF 0.4.0
+        // Création du tensor
+        Shape shape = Shape.of(pixelData.length);
         FloatBuffer floatBuffer = FloatBuffer.wrap(pixelData);
-        
-        // Pour TensorFlow 0.4.0, utiliser cette forme simplifiée
-        return Tensor.create(new long[]{1, height, width, 3}, floatBuffer);
+        TFloat32 t = TFloat32.tensorOf(shape, DataBuffers.of(pixelData));
+        //return Tensor.create(new long[]{1, height, width, 3}, floatBuffer);
+        return t;
     }
     
     /**
