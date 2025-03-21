@@ -15,6 +15,7 @@ import org.tensorflow.Tensor;
 import jakarta.annotation.PostConstruct;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -82,12 +83,15 @@ public class VisualActivityClassifier {
                     .feed("input", imageTensor)
                     .fetch("output");
             
-            Tensor resultTensor = runner.run().get(0);
+            List<Tensor> outputs = runner.run();
+            Tensor resultTensor = outputs.get(0);
             
-            // Extraire les résultats du Tensor de manière compatible avec la version récente de TensorFlow
+            // Extraire les résultats du Tensor
             int numActivities = ActivityType.values().length - 1; // -1 pour exclure ABSENT
             FloatBuffer resultBuffer = FloatBuffer.allocate(1 * numActivities);
-            resultTensor.asRawTensor().data().read(resultBuffer);
+            
+            // Mise à jour pour compatibilité avec l'API
+            resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
             resultBuffer.rewind();
             
             // Conversion des probabilités en map
