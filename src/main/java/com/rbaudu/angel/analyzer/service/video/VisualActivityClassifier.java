@@ -9,10 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.tensorflow.SavedModelBundle;
+import org.tensorflow.Session;
 import org.tensorflow.Tensor;
 
-import javax.annotation.PostConstruct;
-import java.util.Arrays;
+import jakarta.annotation.PostConstruct;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,27 +72,30 @@ public class VisualActivityClassifier {
         
         try {
             // Prétraitement de l'image
-            Tensor<?> imageTensor = videoUtils.prepareImageForModel(
+            Tensor imageTensor = videoUtils.prepareImageForModel(
                     frame, 
                     config.getInputImageWidth(),
                     config.getInputImageHeight());
             
             // Exécution de la classification avec TensorFlow
-            Tensor<?> resultTensor = model.session().runner()
+            Session.Runner runner = model.session().runner()
                     .feed("input", imageTensor)
-                    .fetch("output")
-                    .run().get(0);
+                    .fetch("output");
             
-            // Récupération des probabilités
-            float[][] probabilities = new float[1][ActivityType.values().length - 1]; // -1 pour exclure ABSENT
-            resultTensor.copyTo(probabilities);
+            Tensor resultTensor = runner.run().get(0);
+            
+            // Extraire les résultats du Tensor de manière compatible avec la version récente de TensorFlow
+            int numActivities = ActivityType.values().length - 1; // -1 pour exclure ABSENT
+            FloatBuffer resultBuffer = FloatBuffer.allocate(1 * numActivities);
+            resultTensor.asRawTensor().data().read(resultBuffer);
+            resultBuffer.rewind();
             
             // Conversion des probabilités en map
             Map<ActivityType, Double> result = new HashMap<>();
-            for (int i = 0; i < probabilities[0].length; i++) {
+            for (int i = 0; i < numActivities; i++) {
                 ActivityType activity = mapIndexToActivityType(i);
                 if (activity != ActivityType.ABSENT) { // On exclut ABSENT de la classification visuelle
-                    double probability = probabilities[0][i];
+                    double probability = resultBuffer.get();
                     if (probability > config.getActivityConfidenceThreshold()) {
                         result.put(activity, probability);
                     }

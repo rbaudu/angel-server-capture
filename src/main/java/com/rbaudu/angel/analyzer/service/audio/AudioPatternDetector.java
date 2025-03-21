@@ -8,11 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.tensorflow.SavedModelBundle;
+import org.tensorflow.Session;
 import org.tensorflow.Tensor;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,22 +95,29 @@ public class AudioPatternDetector {
             
             float[] mfcc = audioUtils.extractMFCC(audioData, targetFormat.getSampleRate(), 13);
             
-            // Conversion en Tensor
-            Tensor<?> featureTensor = audioUtils.audioToTensor(mfcc);
+            // Conversion en Tensor en utilisant les API modernes de TensorFlow
+            Tensor featureTensor = audioUtils.audioToTensor(mfcc);
             
             // Exécution de l'inférence
-            Tensor<?> resultTensor = model.session().runner()
+            Session.Runner runner = model.session().runner()
                     .feed("input", featureTensor)
-                    .fetch("output")
-                    .run().get(0);
+                    .fetch("output");
             
-            // Récupération des probabilités
-            float[][] probabilities = new float[1][5]; // Supposons 5 types de sons identifiables
-            resultTensor.copyTo(probabilities);
+            Tensor resultTensor = runner.run().get(0);
+            
+            // Extraire les résultats du tensor
+            int numClasses = 5; // Supposons 5 types de sons identifiables
+            FloatBuffer resultBuffer = FloatBuffer.allocate(numClasses);
+            resultTensor.asRawTensor().data().read(resultBuffer);
+            resultBuffer.rewind();
+            
+            // Convertir les résultats en tableau
+            float[] audioClasses = new float[numClasses];
+            resultBuffer.get(audioClasses);
             
             // Conversion en Map d'activités
             Map<ActivityType, Double> result = new HashMap<>();
-            mapAudioClassesToActivities(probabilities[0], result);
+            mapAudioClassesToActivities(audioClasses, result);
             
             logger.debug("Patterns audio détectés: {}", result);
             return result;

@@ -5,8 +5,9 @@ import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.global.opencv_imgproc;
 import org.springframework.stereotype.Component;
 import org.tensorflow.Tensor;
-import org.tensorflow.types.TFloat32;
-
+import org.tensorflow.ndarray.FloatNdArray;
+import org.tensorflow.ndarray.NdArrays;
+import org.tensorflow.ndarray.Shape;
 import java.nio.FloatBuffer;
 
 /**
@@ -68,17 +69,21 @@ public class VideoUtils {
         // Remplir le tampon avec les valeurs de pixels
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                double[] pixel = frame.createBuffer().get();
-                floatBuffer.put((float) pixel[0]); // R
-                floatBuffer.put((float) pixel[1]); // G
-                floatBuffer.put((float) pixel[2]); // B
+                float[] pixel = new float[3];
+                frame.ptr(y, x).getFloatArray(0, pixel, 0, 3);
+                floatBuffer.put(pixel[0]); // R
+                floatBuffer.put(pixel[1]); // G
+                floatBuffer.put(pixel[2]); // B
             }
         }
         
         floatBuffer.rewind();
         
         // Créer le tensor à partir du tampon
-        return Tensor.create(org.tensorflow.Shape.of(1, height, width, 3), floatBuffer);
+        Shape shape = Shape.of(1, height, width, 3);
+        FloatNdArray ndArray = NdArrays.createFloatNdArray(shape);
+        ndArray.read(floatBuffer);
+        return Tensor.of(shape, ndArray.asRawTensor().data());
     }
     
     /**
@@ -88,7 +93,7 @@ public class VideoUtils {
      * @param targetHeight Hauteur cible
      * @return Tensor prêt pour l'inférence
      */
-    public Tensor<TFloat32> prepareImageForModel(Mat frame, int targetWidth, int targetHeight) {
+    public Tensor prepareImageForModel(Mat frame, int targetWidth, int targetHeight) {
         // Chaîne de prétraitement
         Mat resized = resizeFrame(frame, targetWidth, targetHeight);
         Mat rgb = bgrToRgb(resized);

@@ -4,17 +4,18 @@ import com.rbaudu.angel.analyzer.config.AnalyzerConfig;
 import com.rbaudu.angel.analyzer.util.ModelLoader;
 import com.rbaudu.angel.analyzer.util.VideoUtils;
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.MatVector;
+import org.bytedeco.opencv.opencv_objdetect.HOGDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.tensorflow.SavedModelBundle;
+import org.tensorflow.Session;
 import org.tensorflow.Tensor;
-import org.tensorflow.ndarray.Shape;
-import org.tensorflow.ndarray.buffer.FloatDataBuffer;
-import org.tensorflow.types.TFloat32;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.annotation.PostConstruct;
+import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,9 +35,6 @@ public class PresenceDetector {
     
     /**
      * Constructeur avec injection de dépendances.
-														
-										   
-												 
      */
     @Autowired
     public PresenceDetector(ModelLoader modelLoader, VideoUtils videoUtils, AnalyzerConfig config) {
@@ -79,25 +77,29 @@ public class PresenceDetector {
             // Redimensionner et prétraiter l'image
             Mat processedFrame = videoUtils.resizeFrame(frame, 320, 320);
             Tensor imageTensor = videoUtils.prepareImageForModel(processedFrame, 320, 320);
-						   
-												
-												  
             
             // Exécuter l'inférence
-            List<Tensor> outputs = model.session().runner()
+            Session.Runner runner = model.session().runner()
                     .feed("serving_default_input_tensor", imageTensor)
-                    .fetch("StatefulPartitionedCall")
-                    .run();
+                    .fetch("StatefulPartitionedCall");
             
-            // Traiter les résultats (format dépendant du modèle exact)
-            // Pour SSD MobileNet, les résultats contiennent généralement:
-            // - Boîtes englobantes
-            // - Scores de confiance
-            // - Classes (indices)
+            Tensor resultTensor = runner.run().get(0);
             
-            Tensor resultTensor = outputs.get(0);
-            float[][][] result = new float[1][100][7]; // [batch, num_detections, [y1, x1, y2, x2, score, class, ?]]
-            resultTensor.copyTo(result);
+            // Créer un buffer pour recevoir les résultats
+            // Format typique: [batch, num_detections, [y1, x1, y2, x2, score, class, ?]]
+            float[][][] result = new float[1][100][7]; 
+            
+            // Copier les résultats du tensor dans le buffer
+            FloatBuffer resultBuffer = FloatBuffer.allocate(1 * 100 * 7);
+            resultTensor.asRawTensor().data().read(resultBuffer);
+            resultBuffer.rewind();
+            
+            // Extraire les résultats du buffer
+            for (int i = 0; i < 100; i++) {
+                for (int j = 0; j < 7; j++) {
+                    result[0][i][j] = resultBuffer.get();
+                }
+            }
             
             // Chercher les détections de personnes
             for (int i = 0; i < 100; i++) {
@@ -123,15 +125,19 @@ public class PresenceDetector {
     /**
      * Alternative basée sur OpenCV pour la détection de personnes.
      * Utilisé comme solution de secours si TensorFlow ne fonctionne pas.
-															   
      */
     public boolean detectPersonWithHOG(Mat frame) {
         try {
-            org.bytedeco.opencv.opencv_objdetect.HOGDescriptor hog = new org.bytedeco.opencv.opencv_objdetect.HOGDescriptor();
-            hog.setSVMDetector(org.bytedeco.opencv.opencv_objdetect.HOGDescriptor.getDefaultPeopleDetector());
+            HOGDescriptor hog = new HOGDescriptor();
             
-            org.bytedeco.opencv.opencv_core.RectVector foundLocations = new org.bytedeco.opencv.opencv_core.RectVector();
-            org.bytedeco.opencv.opencv_core.DoubleVector weights = new org.bytedeco.opencv.opencv_core.DoubleVector();
+            // Utiliser une matrice pour les descripteurs HOG au lieu de FloatPointer
+            Mat hogDescriptors = new Mat();
+            HOGDescriptor.getDefaultPeopleDetector().copyTo(hogDescriptors);
+            hog.setSVMDetector(hogDescriptors);
+            
+            // Remplacer DoubleVector par un format compatible
+            MatVector foundLocations = new MatVector();
+            Mat weights = new Mat();
             
             // Redimensionner pour de meilleures performances
             Mat resizedFrame = videoUtils.resizeFrame(frame, 640, 480);
