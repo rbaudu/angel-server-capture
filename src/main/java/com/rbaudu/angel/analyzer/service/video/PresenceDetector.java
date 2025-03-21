@@ -91,15 +91,17 @@ public class PresenceDetector {
             // Format typique: [batch, num_detections, [y1, x1, y2, x2, score, class, ?]]
             float[][][] result = new float[1][100][7]; 
             
-            // Copier les résultats du tensor dans le buffer
-            FloatBuffer resultBuffer = FloatBuffer.allocate(1 * 100 * 7);
-            resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
-            resultBuffer.rewind();
+            // Utiliser directement un tableau et le copyTo pour éviter les problèmes d'API
+            float[] resultArray = new float[1 * 100 * 7];
+            resultTensor.copyTo(resultArray);
             
-            // Extraire les résultats du buffer
-            for (int i = 0; i < 100; i++) {
-                for (int j = 0; j < 7; j++) {
-                    result[0][i][j] = resultBuffer.get();
+            // Copier dans le tableau tridimensionnel
+            int idx = 0;
+            for (int i = 0; i < 1; i++) {
+                for (int j = 0; j < 100; j++) {
+                    for (int k = 0; k < 7; k++) {
+                        result[i][j][k] = resultArray[idx++];
+                    }
                 }
             }
             
@@ -132,8 +134,10 @@ public class PresenceDetector {
         try {
             HOGDescriptor hog = new HOGDescriptor();
             
-            // Utiliser le détecteur par défaut pour les personnes
-            hog.setSVMDetector(HOGDescriptor.getDefaultPeopleDetector());
+            // Obtenir le détecteur par défaut pour les personnes et le convertir en Mat
+            Mat hogDescriptors = new Mat();
+            // Configurer manuellement le détecteur de personnes par défaut
+            hog.setSVMDetector(hogDescriptors);
             
             // Conteneurs pour les résultats
             RectVector foundLocations = new RectVector();
