@@ -1,6 +1,8 @@
 package com.rbaudu.angel.analyzer.model;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 
 /**
@@ -152,8 +154,13 @@ public class AnalysisResultDto {
      * @return Le DTO correspondant
      */
     public static AnalysisResultDto fromAnalysisResult(AnalysisResult result) {
+        // Conversion de Instant à LocalDateTime
+        LocalDateTime localDateTime = result.getTimestamp() != null 
+            ? LocalDateTime.ofInstant(result.getTimestamp(), ZoneId.systemDefault()) 
+            : null;
+        
         return AnalysisResultDto.builder()
-                .timestamp(result.getTimestamp())
+                .timestamp(localDateTime)
                 .activityType(result.getActivityType())
                 .confidence(result.getConfidence())
                 .personPresent(result.isPersonPresent())
@@ -171,6 +178,16 @@ public class AnalysisResultDto {
         
         public Builder timestamp(LocalDateTime timestamp) {
             this.timestamp = timestamp;
+            return this;
+        }
+        
+        /**
+         * Conversion d'Instant à LocalDateTime pour compatibilité
+         */
+        public Builder timestamp(Instant instant) {
+            if (instant != null) {
+                this.timestamp = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+            }
             return this;
         }
         
