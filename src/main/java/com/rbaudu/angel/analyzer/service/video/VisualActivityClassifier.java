@@ -88,18 +88,17 @@ public class VisualActivityClassifier {
             
             // Extraire les résultats du Tensor
             int numActivities = ActivityType.values().length - 1; // -1 pour exclure ABSENT
-            FloatBuffer resultBuffer = FloatBuffer.allocate(1 * numActivities);
+            float[] results = new float[numActivities];
             
-            // Mise à jour pour compatibilité avec l'API
-            resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
-            resultBuffer.rewind();
+            // Utiliser copyTo pour extraire les résultats directement
+            resultTensor.copyTo(results);
             
             // Conversion des probabilités en map
             Map<ActivityType, Double> result = new HashMap<>();
             for (int i = 0; i < numActivities; i++) {
                 ActivityType activity = mapIndexToActivityType(i);
                 if (activity != ActivityType.ABSENT) { // On exclut ABSENT de la classification visuelle
-                    double probability = resultBuffer.get();
+                    double probability = results[i];
                     if (probability > config.getActivityConfidenceThreshold()) {
                         result.put(activity, probability);
                     }

@@ -7,11 +7,14 @@ Les erreurs de compilation identifiées dans le projet étaient principalement l
 1. **Incompatibilités avec l'API TensorFlow** :
    - Utilisation d'API ndarray incompatibles avec la version 0.5.0 (comme `createFloatNdArray` et `asRawTensor`)
    - Méthodes de lecture de buffer incompatibles (`read()` avec `FloatBuffer`)
+   - Méthode `asFloatBuffer()` inexistante dans l'API ByteDataBuffer
+   - Méthode `Tensor.create(long[], FloatBuffer)` inexistante
 
 2. **Incompatibilités avec l'API OpenCV/JavaCV** :
    - Méthode `copyTo` appelée sur `FloatPointer` avec `Mat` comme argument
    - Utilisation incorrecte de `HOGDescriptor.detectMultiScale` avec `MatVector` au lieu de `RectVector`
    - Méthode `getFloatArray` non trouvée dans `BytePointer`
+   - Incompatibilité entre `FloatPointer` et les méthodes `setSVMDetector` qui attendent un `Mat`
 
 ## Solutions apportées
 
@@ -25,7 +28,7 @@ Les erreurs de compilation identifiées dans le projet étaient principalement l
 
 - Suppression des références à `NdArrays.createFloatNdArray` et `ndArray.asRawTensor()`
 - Remplacement de la méthode d'extraction de données des pixels en utilisant `ptr()` et `get()`
-- Utilisation de `Tensor.create()` pour créer des tenseurs directement depuis un FloatBuffer
+- Utilisation de `Tensor.create()` avec le bon format pour créer des tenseurs avec DataType
 
 Exemple de code modifié :
 ```java
@@ -37,7 +40,7 @@ return Tensor.of(shape, ndArray.asRawTensor().data());
 
 // Après
 long[] shape = {1, height, width, 3};
-return Tensor.create(shape, floatBuffer);
+return Tensor.create(shape, DataType.FLOAT, FloatBuffer.wrap(pixelData));
 ```
 
 ### 3. Corrections dans AudioUtils.java
@@ -48,20 +51,34 @@ return Tensor.create(shape, floatBuffer);
 ### 4. Corrections dans PresenceDetector.java
 
 - Correction de l'utilisation de `HOGDescriptor.detectMultiScale` pour utiliser correctement `RectVector`
-- Remplacement de l'accès aux données du tensor avec une approche compatible :
+- Remplacement de l'accès aux données du tensor par une méthode plus simple :
 
 ```java
 // Avant
-resultTensor.asRawTensor().data().read(resultBuffer);
+resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
 
 // Après
-resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
+float[] resultArray = new float[1 * 100 * 7];
+resultTensor.copyTo(resultArray);
 ```
 
-### 5. Corrections similaires pour AudioPatternDetector.java et VisualActivityClassifier.java
+- Simplification de la configuration du HOGDescriptor en évitant les conflits de types
 
-- Mise à jour des méthodes d'accès aux données des tenseurs pour utiliser `asFloatBuffer()` au lieu de `read()`
-- Correction des appels API pour respecter les signatures de méthodes compatibles avec la version 0.4.0
+### 5. Corrections dans AudioPatternDetector.java et VisualActivityClassifier.java
+
+- Utilisation directe de `copyTo` pour extraire les données des tenseurs dans des tableaux
+- Suppression des références aux méthodes qui n'existent pas dans la version 0.4.0
+- Simplification de la manipulation des données pour éviter les problèmes d'API
+
+```java
+// Avant
+resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
+resultBuffer.rewind();
+resultBuffer.get(audioClasses);
+
+// Après
+resultTensor.copyTo(audioClasses);
+```
 
 ## Impacts sur le fonctionnement
 
@@ -85,3 +102,39 @@ Ces corrections permettent de maintenir les mêmes fonctionnalités tout en assu
 4. `src/main/java/com/rbaudu/angel/analyzer/service/video/PresenceDetector.java`
 5. `src/main/java/com/rbaudu/angel/analyzer/service/audio/AudioPatternDetector.java`
 6. `src/main/java/com/rbaudu/angel/analyzer/service/video/VisualActivityClassifier.java`
+
+## Guide des bonnes pratiques avec TensorFlow Java
+
+Pour éviter des problèmes similaires à l'avenir, voici quelques bonnes pratiques pour l'utilisation de TensorFlow Java :
+
+1. **Créer des tenseurs** :
+   ```java
+   // Méthode préférée pour créer des tenseurs à partir de tableaux
+   float[] data = new float[size];
+   // Remplir le tableau...
+   long[] shape = {dim1, dim2, ...};
+   Tensor tensor = Tensor.create(shape, DataType.FLOAT, FloatBuffer.wrap(data));
+   ```
+
+2. **Extraire des données** :
+   ```java
+   // Méthode préférée pour extraire des données d'un tensor
+   float[] results = new float[size];
+   tensor.copyTo(results);
+   ```
+
+3. **Exécuter l'inférence** :
+   ```java
+   List<Tensor> outputs = model.session().runner()
+       .feed("input_name", inputTensor)
+       .fetch("output_name")
+       .run();
+   Tensor resultTensor = outputs.get(0);
+   ```
+
+4. **Libérer les ressources** :
+   ```java
+   // Toujours fermer les tenseurs et les modèles quand ils ne sont plus nécessaires
+   tensor.close();
+   model.close();
+   ```
