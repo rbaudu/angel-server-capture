@@ -16,6 +16,7 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -95,7 +96,7 @@ public class AudioPatternDetector {
             
             float[] mfcc = audioUtils.extractMFCC(audioData, targetFormat.getSampleRate(), 13);
             
-            // Conversion en Tensor en utilisant les API modernes de TensorFlow
+            // Conversion en Tensor
             Tensor featureTensor = audioUtils.audioToTensor(mfcc);
             
             // Exécution de l'inférence
@@ -103,12 +104,15 @@ public class AudioPatternDetector {
                     .feed("input", featureTensor)
                     .fetch("output");
             
-            Tensor resultTensor = runner.run().get(0);
+            List<Tensor> outputs = runner.run();
+            Tensor resultTensor = outputs.get(0);
             
             // Extraire les résultats du tensor
             int numClasses = 5; // Supposons 5 types de sons identifiables
             FloatBuffer resultBuffer = FloatBuffer.allocate(numClasses);
-            resultTensor.asRawTensor().data().read(resultBuffer);
+            
+            // Mise à jour pour compatibilité API
+            resultBuffer = (FloatBuffer) resultTensor.asRawTensor().data().asFloatBuffer();
             resultBuffer.rewind();
             
             // Convertir les résultats en tableau
