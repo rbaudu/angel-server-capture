@@ -5,10 +5,12 @@ import org.bytedeco.opencv.opencv_core.Size;
 import org.bytedeco.opencv.global.opencv_imgproc;
 import org.springframework.stereotype.Component;
 import org.tensorflow.Tensor;
-import org.tensorflow.ndarray.FloatNdArray;
-import org.tensorflow.ndarray.NdArrays;
-import org.tensorflow.ndarray.Shape;
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.FloatPointer;
+
 import java.nio.FloatBuffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * Utilitaire pour traiter les images vidéo.
@@ -66,24 +68,26 @@ public class VideoUtils {
         // Format: [1, height, width, 3]
         FloatBuffer floatBuffer = FloatBuffer.allocate(1 * height * width * 3);
         
-        // Remplir le tampon avec les valeurs de pixels
+        // Méthode alternative pour extraire les valeurs de pixels
+        BytePointer bytePtr = frame.ptr();
+        float[] pixelData = new float[3];
+        
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                float[] pixel = new float[3];
-                frame.ptr(y, x).getFloatArray(0, pixel, 0, 3);
-                floatBuffer.put(pixel[0]); // R
-                floatBuffer.put(pixel[1]); // G
-                floatBuffer.put(pixel[2]); // B
+                int pos = y * width * 3 + x * 3;
+                for (int c = 0; c < 3; c++) {
+                    // Convertir les valeurs de byte à float (normalisées)
+                    float pixelValue = (bytePtr.get(pos + c) & 0xFF) / 255.0f;
+                    floatBuffer.put(pixelValue);
+                }
             }
         }
         
         floatBuffer.rewind();
         
-        // Créer le tensor à partir du tampon
-        Shape shape = Shape.of(1, height, width, 3);
-        FloatNdArray ndArray = NdArrays.createFloatNdArray(shape);
-        ndArray.read(floatBuffer);
-        return Tensor.of(shape, ndArray.asRawTensor().data());
+        // Création du tensor en utilisant l'API compatible
+        long[] shape = {1, height, width, 3};
+        return Tensor.create(shape, floatBuffer);
     }
     
     /**
