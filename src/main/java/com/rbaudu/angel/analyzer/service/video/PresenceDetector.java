@@ -91,9 +91,14 @@ public class PresenceDetector {
             // Format typique: [batch, num_detections, [y1, x1, y2, x2, score, class, ?]]
             float[][][] result = new float[1][100][7]; 
             
-            // Utiliser directement un tableau et le copyTo pour éviter les problèmes d'API
+            // Utiliser directement un tableau et un FloatBuffer pour extraire les données
             float[] resultArray = new float[1 * 100 * 7];
-            resultTensor.copyTo(resultArray);
+            FloatBuffer resultBuffer = FloatBuffer.allocate(1 * 100 * 7);
+            
+            // Pour TensorFlow 0.4.0, extraire d'abord les données dans un FloatBuffer
+            resultBuffer = resultTensor.copyTo(FloatBuffer.allocate(1 * 100 * 7));
+            resultBuffer.position(0);  // Rewind the buffer
+            resultBuffer.get(resultArray);
             
             // Copier dans le tableau tridimensionnel
             int idx = 0;
@@ -134,10 +139,8 @@ public class PresenceDetector {
         try {
             HOGDescriptor hog = new HOGDescriptor();
             
-            // Obtenir le détecteur par défaut pour les personnes et le convertir en Mat
-            Mat hogDescriptors = new Mat();
-            // Configurer manuellement le détecteur de personnes par défaut
-            hog.setSVMDetector(hogDescriptors);
+            // Dans OpenCV 4.x, on peut utiliser le détecteur de personnes par défaut directement
+            hog.setSVMDetector(HOGDescriptor.getDefaultPeopleDetector());
             
             // Conteneurs pour les résultats
             RectVector foundLocations = new RectVector();
