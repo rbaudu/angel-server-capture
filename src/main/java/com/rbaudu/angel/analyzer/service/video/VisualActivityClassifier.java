@@ -90,8 +90,11 @@ public class VisualActivityClassifier {
             int numActivities = ActivityType.values().length - 1; // -1 pour exclure ABSENT
             float[] results = new float[numActivities];
             
-            // Utiliser copyTo pour extraire les résultats directement
-            resultTensor.copyTo(results);
+            // Pour TensorFlow 0.4.0, extraire d'abord les données dans un FloatBuffer
+            FloatBuffer resultBuffer = FloatBuffer.allocate(numActivities);
+            resultBuffer = resultTensor.copyTo(resultBuffer);
+            resultBuffer.position(0);  // Rewind the buffer
+            resultBuffer.get(results);
             
             // Conversion des probabilités en map
             Map<ActivityType, Double> result = new HashMap<>();
